@@ -1,0 +1,23 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "ExportNav",
+	"Description": "",
+	"Category": "Other",
+	"CreatedBy": "imzlp",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "ExportNav",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}

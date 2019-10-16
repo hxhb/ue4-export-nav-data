@@ -1,0 +1,3 @@
+recast navigation version :c40188c796f089f89a42e0b939d934178dbcfc5c
+build evnironment: VS2017
+build time: 2019.10.16 12:49

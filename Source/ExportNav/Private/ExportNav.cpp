@@ -5,11 +5,13 @@
 #include "ExportNavStyle.h"
 #include "ExportNavCommands.h"
 
+
 #include "Misc/MessageDialog.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "DesktopPlatformModule.h"
 #include "LevelEditor.h"
-
+#include "HAL/FileManager.h"
+#include "Interfaces/IPluginManager.h"
 
 static const FName ExportNavTabName("ExportNav");
 
@@ -64,17 +66,19 @@ void FExportNavModule::PluginButtonClicked()
 
 void FExportNavModule::DoExportNavData()
 {
+	UWorld* World = GEditor->GetEditorWorldContext().World();
 	IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
-
+	FString PluginPath = FPaths::ConvertRelativePathToFull(IPluginManager::Get().FindPlugin(TEXT("ExportNav"))->GetBaseDir());
 	if (DesktopPlatform)
 	{
 		TArray<FString> SaveFilenames;
+		FString SaveName= World->GetMapName()+FString(TEXT("-RecastNavMesh-"))+FDateTime::Now().ToString();
 		const bool bOpened = DesktopPlatform->SaveFileDialog(
 			nullptr,
 			LOCTEXT("SaveNav", "Save Navigation Data").ToString(),
-			FPaths::ProjectSavedDir(),
-			TEXT("RecastNavMesh-Default"),
-			TEXT("*|*.*"),
+			FPaths::Combine(PluginPath, TEXT("RecastDemo/Meshes")),
+			SaveName,
+			TEXT("*.obj|*.obj"),
 			EFileDialogFlags::None,
 			SaveFilenames
 		);
@@ -83,9 +87,15 @@ void FExportNavModule::DoExportNavData()
 		{
 			FString SaveToFole = FPaths::ConvertRelativePathToFull(SaveFilenames[0]);
 			UFlibExportNavData::ExecExportNavData(SaveToFole);
+
+			
+			// FString RecastDemoProc = FPaths::Combine(PluginPath,TEXT("RecastDemo/RecastDemo.exe"));
+			/*FString EndCommand = TEXT("cmd /c start /D ") + RecastDemoProc;
+			system(TCHAR_TO_ANSI(*EndCommand));*/
+			// FPlatformProcess::CreateProc(*RecastDemoProc, NULL, false, false ,false, NULL, NULL, NULL, NULL);
 		}
 	}
-	// UFlibExportNavData::ExecExportNavData(TEXT(""));
+	
 	
 }
 void FExportNavModule::AddMenuExtension(FMenuBuilder& Builder)

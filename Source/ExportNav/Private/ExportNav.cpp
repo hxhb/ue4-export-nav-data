@@ -8,12 +8,8 @@
 #include "Misc/MessageDialog.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "DesktopPlatformModule.h"
-#include "Templates/SharedPointer.h"
 #include "LevelEditor.h"
-#include "Editor.h"
-#include "NavigationSystem.h"
-#include "NavigationData.h"
-#include "AI/NavDataGenerator.h"
+
 
 static const FName ExportNavTabName("ExportNav");
 
@@ -73,21 +69,11 @@ void FExportNavModule::DoExportNavData()
 	if (DesktopPlatform)
 	{
 		TArray<FString> SaveFilenames;
-		FString SaveToName;
-		UWorld* World = GEditor->GetEditorWorldContext(false).World();
-
-		if (World->GetNavigationSystem())
-		{
-			if (const ANavigationData* NavData = Cast<ANavigationData>(World->GetNavigationSystem()->GetMainNavData()))
-			{
-				SaveToName = NavData->GetName();
-			}
-		}
 		const bool bOpened = DesktopPlatform->SaveFileDialog(
 			nullptr,
 			LOCTEXT("SaveNav", "Save Navigation Data").ToString(),
 			FPaths::ProjectSavedDir(),
-			SaveToName,
+			TEXT("RecastNavMesh-Default"),
 			TEXT("*|*.*"),
 			EFileDialogFlags::None,
 			SaveFilenames

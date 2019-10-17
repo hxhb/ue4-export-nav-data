@@ -16,7 +16,7 @@
 	"Modules": [
 		{
 			"Name": "ExportNav",
-			"Type": "Editor",
+			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
 	]

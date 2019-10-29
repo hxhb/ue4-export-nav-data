@@ -86,7 +86,7 @@ void FExportNavModule::DoExportNavData()
 		if (SaveFilenames.Num() > 0)
 		{
 			FString SaveToFole = FPaths::ConvertRelativePathToFull(SaveFilenames[0]);
-			UFlibExportNavData::ExecExportNavData(SaveToFole);
+			UFlibExportNavData::ExecExportNavMesh(SaveToFole);
 
 			
 			// FString RecastDemoProc = FPaths::Combine(PluginPath,TEXT("RecastDemo/RecastDemo.exe"));

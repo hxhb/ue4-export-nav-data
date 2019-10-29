@@ -14,16 +14,16 @@ namespace NseRecastHelper
 {
 	struct NavMeshSetHeader
 	{
-		int magic;
-		int version;
-		int numTiles;
+		int32 magic;
+		int32 version;
+		int32 numTiles;
 		dtNavMeshParams params;
 	};
 
 	struct NavMeshTileHeader
 	{
 		dtTileRef tileRef;
-		int dataSize;
+		int32 dataSize;
 	};
 
 	static const int NAVMESHSET_MAGIC = 'M' << 24 | 'S' << 16 | 'E' << 8 | 'T'; //'MSET';
@@ -55,6 +55,10 @@ namespace NseRecastHelper
 	};
 	static FCustomVector Recast2UnrealPoint(const FCustomVector& Vector);
 	static FCustomVector Unreal2RecastPoint(const FCustomVector& Vector);
+
+	static dtNavMesh* loadAll(const char* path);
+	static bool dtIsValidNagivationPoint(UWorld* InWorld,dtNavMesh* NavMeshData, const NseRecastHelper::FCustomVector& InPoint);
+	static dtNavMesh* LoadNavData(const char* Path);
 };
 
 /**
@@ -66,11 +70,15 @@ class EXPORTNAV_API UFlibExportNavData : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 public:
 	UFUNCTION(Exec,BlueprintCallable)
-		static bool ExecExportNavData(const FString& SavePath);
+		static bool ExecExportNavMesh(const FString& SavePath);
 
 
 	UFUNCTION(BlueprintCallable,meta=(ContextObject="WorldContextObject"))
 		static bool IsValidNagivationPoint(UObject* WorldContextObject,const FVector& Point);
-	static bool dtIsValidNagivationPoint(dtNavMesh* NavMeshData, const NseRecastHelper::FCustomVector& InPoint);
-	static dtNavMesh* LoadNavData(const char* Path);
+	
+	UFUNCTION(BlueprintCallable)
+		static bool ExportNavData(const FString& InFilePath);
+
+	static dtNavMesh* GetdtNavMeshInsByWorld(UWorld* InWorld);
+	static void SaveNavMeshData(const char* path, const dtNavMesh* mesh);
 };

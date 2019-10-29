@@ -62,8 +62,8 @@ void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& Fi
 					{
 						FVector Corrd = FVector{
 							CachedGeometry.Verts[i]/100.f,
-							CachedGeometry.Verts[i+2] / 100.f,
-							CachedGeometry.Verts[i+1] / 100.f,
+							CachedGeometry.Verts[i+2]/100.f,
+							CachedGeometry.Verts[i+1]/100.f,
 						};
 						// CoordBuffer.Add(CachedGeometry.Verts[i]);
 						CoordBuffer.Add(Corrd.X);
@@ -72,6 +72,8 @@ void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& Fi
 					}
 				}
 				else
+
+
 				{
 					const TArray<FAreaNavModifier>& AreaMods = Element.Data->Modifiers.GetAreas();
 					for (int32 i = 0; i < AreaMods.Num(); i++)

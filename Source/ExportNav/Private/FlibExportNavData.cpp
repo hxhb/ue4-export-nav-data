@@ -37,21 +37,17 @@ bool UFlibExportNavData::ExecExportNavMesh(const FString& SaveFile)
 bool UFlibExportNavData::IsValidNagivationPoint(UObject* WorldContextObject, const FVector& Point, const FVector InExtern)
 {
 	bool rSuccess = false;
-	//IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
-	//FString PluginPath = FPaths::ConvertRelativePathToFull(IPluginManager::Get().FindPlugin(TEXT("ExportNav"))->GetBaseDir());
-	//FString NavDataPath= FPaths::Combine(PluginPath, TEXT("RecastDemo/solo_navmesh.bin"));
-	//if (FPaths::FileExists(NavDataPath))
+	IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
+	FString PluginPath = FPaths::ConvertRelativePathToFull(IPluginManager::Get().FindPlugin(TEXT("ExportNav"))->GetBaseDir());
+	FString NavDataPath = FPaths::Combine(PluginPath, TEXT("solo_navmesh.bin"));
+	if (FPaths::FileExists(NavDataPath))
 	{
-		//dtNavMesh* NavMeshData = NseRecastHelper::loadAll(TCHAR_TO_ANSI(*NavDataPath));
+		dtNavMesh* NavMeshData = NseRecastHelper::DeSerializedtNavMesh(TCHAR_TO_ANSI(*NavDataPath));
 		UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject,EGetWorldErrorMode::LogAndReturnNull);
-		dtNavMesh* NavMeshData = UFlibExportNavData::GetdtNavMeshInsByWorld(World);
+		// dtNavMesh* NavMeshData = UFlibExportNavData::GetdtNavMeshInsByWorld(World);
 		if (NavMeshData)
 		{
 			rSuccess = NseRecastHelper::dtIsValidNagivationPoint(World,NavMeshData, NseRecastHelper::FCustomVector(Point),NseRecastHelper::FCustomVector(InExtern));
-			UKismetSystemLibrary::PrintString(WorldContextObject, TEXT("Load Nav mesh data is success"));
-		}
-		else {
-			UKismetSystemLibrary::PrintString(WorldContextObject, TEXT("Load Nav mesh data is faild"));
 		}
 	}
 
@@ -150,8 +146,8 @@ bool NseRecastHelper::dtIsValidNagivationPoint(UWorld* InWorld,dtNavMesh* InNavM
 	ANavigationData* MainNavDataIns = NavSys->GetDefaultNavDataInstance();
 	ARecastNavMesh* RecastNavMeshIns = Cast<ARecastNavMesh>(MainNavDataIns);
 
-	FRecastSpeciaLinkFilter LinkFilter(NavSys, RecastNavMeshIns);
-
+	// FRecastSpeciaLinkFilter LinkFilter(NavSys, RecastNavMeshIns);
+	dtQuerySpecialLinkFilter LinkFilter;
 	dtNavMeshQuery NavQuery;
 	NavQuery.init(InNavMeshData, 0, &LinkFilter);
 	dtPolyRef PolyRef;

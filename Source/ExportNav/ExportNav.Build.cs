@@ -59,5 +59,11 @@ public class ExportNav : ModuleRules
 			);
 
         OptimizeCode = CodeOptimization.InShippingBuildsOnly;
+        PublicDefinitions.AddRange(
+                new string[]
+                {
+                    // "EXPORT_NAV_PLUGIN_IN_UE4"
+                }
+            );
 	}
 }

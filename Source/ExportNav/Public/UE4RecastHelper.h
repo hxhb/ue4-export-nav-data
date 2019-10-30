@@ -1,23 +1,24 @@
 #pragma once
 
-#include "DetourNavMesh.h"
-#include "DetourNavMeshQuery.h"
+#include "Detour/DetourNavMesh.h"
+#include "Detour/DetourNavMeshQuery.h"
 #include <math.h>
+#include <inttypes.h>
 
 namespace UE4RecastHelper
 {
 	struct NavMeshSetHeader
 	{
-		int32 magic;
-		int32 version;
-		int32 numTiles;
+		int32_t magic;
+		int32_t version;
+		int32_t numTiles;
 		dtNavMeshParams params;
 	};
 
 	struct NavMeshTileHeader
 	{
 		dtTileRef tileRef;
-		int32 dataSize;
+		int32_t dataSize;
 	};
 
 	static const int NAVMESHSET_MAGIC = 'M' << 24 | 'S' << 16 | 'E' << 8 | 'T'; //'MSET';
@@ -29,24 +30,24 @@ namespace UE4RecastHelper
 		float Y;
 		float Z;
 	public:
-		FORCEINLINE FCustomVector() :X(0.f), Y(0.f), Z(0.f) {}
-		FORCEINLINE FCustomVector(float* InV) : X(InV[0]), Y(InV[1]), Z(InV[2]) {}
-		FORCEINLINE FCustomVector(float px, float py, float pz) :X(px), Y(py), Z(pz) {}
+		inline FCustomVector() :X(0.f), Y(0.f), Z(0.f) {}
+		inline FCustomVector(float* InV) : X(InV[0]), Y(InV[1]), Z(InV[2]) {}
+		inline FCustomVector(float px, float py, float pz) :X(px), Y(py), Z(pz) {}
 		FCustomVector(const FCustomVector&) = default;
 
-		FORCEINLINE FCustomVector operator-(const FCustomVector& V) const{
+		inline FCustomVector operator-(const FCustomVector& V) const{
 			return FCustomVector(X - V.X, Y - V.Y, Z - V.Z);
 		}
-		FORCEINLINE FCustomVector operator+(const FCustomVector& V)const {
+		inline FCustomVector operator+(const FCustomVector& V)const {
 			return FCustomVector(X + V.X, Y + V.Y, Z + V.Z);
 		}
-		FORCEINLINE FCustomVector operator-(const float& V)const {
+		inline FCustomVector operator-(const float& V)const {
 			return FCustomVector(X - V, Y - V, Z - V);
 		}
-		FORCEINLINE FCustomVector operator+(const float& V)const {
+		inline FCustomVector operator+(const float& V)const {
 			return FCustomVector(X + V, Y + V, Z + V);
 		}
-		FORCEINLINE FCustomVector GetAbs()const
+		inline FCustomVector GetAbs()const
 		{
 			return FCustomVector{ fabsf(X),fabsf(Y),fabsf(Z) };
 		}

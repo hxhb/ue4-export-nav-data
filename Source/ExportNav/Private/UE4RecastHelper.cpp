@@ -1,25 +1,23 @@
 #include "UE4RecastHelper.h"
-
-#include "Detour/DetourNavMeshQuery.h"
 #include <cstring>
 #include <cstdio>
 
 // #include "HACK_PRIVATE_MEMBER_UTILS.hpp"
 
-bool UE4RecastHelper::dtIsValidNagivationPoint(dtNavMesh* InNavMeshData, const UE4RecastHelper::FCustomVector& InPoint,const UE4RecastHelper::FCustomVector& InExtent)
+bool UE4RecastHelper::dtIsValidNagivationPoint(dtNavMesh* InNavMeshData, const UE4RecastHelper::FCustomVector& InPoint, const UE4RecastHelper::FCustomVector& InExtent)
 {
-	bool bSuccess=false;
-	
+	bool bSuccess = false;
+
 	using namespace UE4RecastHelper;
 
 	if (!InNavMeshData) return bSuccess;
 
 	FCustomVector RcPoint = UE4RecastHelper::Unreal2RecastPoint(InPoint);
 	const FCustomVector ModifiedExtent = InExtent;
-	FCustomVector RcExtent= UE4RecastHelper::Unreal2RecastPoint(ModifiedExtent).GetAbs();
+	FCustomVector RcExtent = UE4RecastHelper::Unreal2RecastPoint(ModifiedExtent).GetAbs();
 	FCustomVector ClosestPoint;
 
-	
+
 	dtNavMeshQuery NavQuery;
 #ifdef EXPORT_NAV_PLUGIN_IN_UE4
 	dtQuerySpecialLinkFilter LinkFilter;
@@ -101,8 +99,8 @@ void UE4RecastHelper::SerializedtNavMesh(const char* path, const dtNavMesh* mesh
 
 dtNavMesh* UE4RecastHelper::DeSerializedtNavMesh(const char* path)
 {
-	
-	std::FILE* fp=std::fopen(path, "rb");
+
+	std::FILE* fp = std::fopen(path, "rb");
 	if (!fp) return 0;
 
 	using namespace UE4RecastHelper;

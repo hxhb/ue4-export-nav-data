@@ -76,7 +76,7 @@ void FExportNavModule::PluginButtonClicked()
 			PluginPath,
 			OutPath
 		);
-		if (FPaths::DirectoryExists(OutPath))
+		if (!OutPath.IsEmpty() && FPaths::DirectoryExists(OutPath))
 		{
 			FString CurrentTime = FDateTime::Now().ToString();
 			FString NavMeshFile = FPaths::Combine(OutPath, MapName + TEXT("-NavMesh-") + CurrentTime+TEXT(".obj"));

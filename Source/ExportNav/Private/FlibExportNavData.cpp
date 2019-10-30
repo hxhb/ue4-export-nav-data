@@ -4,6 +4,7 @@
 #include "Editor.h"
 #include "NavigationSystem.h"
 #include "NavigationData.h"
+#include "RecastQueryFilter.h"
 #include "AI/NavDataGenerator.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "HACK_PRIVATE_MEMBER_UTILS.hpp"
@@ -33,17 +34,8 @@ bool UFlibExportNavData::ExecExportNavMesh(const FString& SaveFile)
 	return false;
 }
 
-bool UFlibExportNavData::IsValidNagivationPoint(UObject* WorldContextObject,const FVector& Point)
+bool UFlibExportNavData::IsValidNagivationPoint(UObject* WorldContextObject, const FVector& Point, const FVector InExtern)
 {
-	//UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
-	//UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(World);
-	//if (NavSys)
-	//{
-	//	FVector OutNavLocation;
-	//	ANavigationData* UseNavData = NavSys->GetDefaultNavDataInstance(FNavigationSystem::DontCreate);
-	//	NavSys->ProjectPointToNavigation(WorldContextObject, Point, FVector{ 1.0,1.0,1.0 }, NULL, NULL);
-	//}
-
 	bool rSuccess = false;
 	//IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
 	//FString PluginPath = FPaths::ConvertRelativePathToFull(IPluginManager::Get().FindPlugin(TEXT("ExportNav"))->GetBaseDir());
@@ -55,7 +47,7 @@ bool UFlibExportNavData::IsValidNagivationPoint(UObject* WorldContextObject,cons
 		dtNavMesh* NavMeshData = UFlibExportNavData::GetdtNavMeshInsByWorld(World);
 		if (NavMeshData)
 		{
-			rSuccess = NseRecastHelper::dtIsValidNagivationPoint(World,NavMeshData, NseRecastHelper::FCustomVector(Point.X, Point.Y, Point.Z));
+			rSuccess = NseRecastHelper::dtIsValidNagivationPoint(World,NavMeshData, NseRecastHelper::FCustomVector(Point),NseRecastHelper::FCustomVector(InExtern));
 			UKismetSystemLibrary::PrintString(WorldContextObject, TEXT("Load Nav mesh data is success"));
 		}
 		else {
@@ -74,7 +66,7 @@ bool UFlibExportNavData::ExportNavData(const FString& InFilePath)
 	
 	if (RecastdtNavMesh)
 	{
-		SaveNavMeshData(TCHAR_TO_ANSI(*InFilePath), RecastdtNavMesh);
+		NseRecastHelper::SerializedtNavMesh(TCHAR_TO_ANSI(*InFilePath), RecastdtNavMesh);
 		return true;
 	}
 	else {
@@ -94,7 +86,7 @@ dtNavMesh* UFlibExportNavData::GetdtNavMeshInsByWorld(UWorld* InWorld)
 
 DECL_HACK_PRIVATE_NOCONST_FUNCTION(dtNavMesh, getTile, dtMeshTile*, int);
 
-void UFlibExportNavData::SaveNavMeshData(const char* path, const dtNavMesh* mesh)
+void NseRecastHelper::SerializedtNavMesh(const char* path, const dtNavMesh* mesh)
 {
 	using namespace NseRecastHelper;
 	if (!mesh) return;
@@ -137,21 +129,21 @@ void UFlibExportNavData::SaveNavMeshData(const char* path, const dtNavMesh* mesh
 
 	fclose(fp);
 }
-#include "RecastQueryFilter.h"
 
-bool NseRecastHelper::dtIsValidNagivationPoint(UWorld* InWorld,dtNavMesh* NavMeshData, const NseRecastHelper::FCustomVector& InPoint)
+
+bool NseRecastHelper::dtIsValidNagivationPoint(UWorld* InWorld,dtNavMesh* InNavMeshData, const NseRecastHelper::FCustomVector& InPoint,const NseRecastHelper::FCustomVector& InExtent)
 {
 	bool bSuccess=false;
 	
 	using namespace NseRecastHelper;
 
-	if (!NavMeshData) return bSuccess;
+	if (!InNavMeshData) return bSuccess;
 
 	FCustomVector RcPoint = NseRecastHelper::Unreal2RecastPoint(InPoint);
-	const FCustomVector ModifiedExtent = FCustomVector(10.f, 10.f, 10.f);
-	FCustomVector RcExtent= NseRecastHelper::Unreal2RecastPoint(ModifiedExtent);
+	const FCustomVector ModifiedExtent = InExtent;
+	FCustomVector RcExtent= NseRecastHelper::Unreal2RecastPoint(ModifiedExtent).GetAbs();
 	
-	FCustomVector ClosestPoint;
+	float ClosestPoint[3] = {0.0f};
 
 	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(InWorld);
 	check(NavSys);
@@ -161,10 +153,10 @@ bool NseRecastHelper::dtIsValidNagivationPoint(UWorld* InWorld,dtNavMesh* NavMes
 	FRecastSpeciaLinkFilter LinkFilter(NavSys, RecastNavMeshIns);
 
 	dtNavMeshQuery NavQuery;
-	NavQuery.init(NavMeshData, 0, &LinkFilter);
+	NavQuery.init(InNavMeshData, 0, &LinkFilter);
 	dtPolyRef PolyRef;
 	dtQueryFilter QueryFilter;
-	NavQuery.findNearestPoly2D(&RcPoint.X, &RcPoint.X, &QueryFilter, &PolyRef, (float*)(&ClosestPoint));
+	NavQuery.findNearestPoly2D(&RcPoint.X, &RcExtent.X, &QueryFilter, &PolyRef, ClosestPoint);
 
 	if (PolyRef > 0)
 	{
@@ -247,7 +239,7 @@ dtNavMesh* NseRecastHelper::LoadNavData(const char* Path)
 }
 
 
-dtNavMesh* NseRecastHelper::loadAll(const char* path)
+dtNavMesh* NseRecastHelper::DeSerializedtNavMesh(const char* path)
 {
 	
 	FILE* fp;

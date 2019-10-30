@@ -35,10 +35,12 @@ namespace NseRecastHelper
 		float Y;
 		float Z;
 	public:
-		FCustomVector() :X(0.f), Y(0.f), Z(0.f) {}
-		FCustomVector(float px, float py, float pz) :X(px), Y(py), Z(pz) {}
+		FORCEINLINE FCustomVector() :X(0.f), Y(0.f), Z(0.f) {}
+		FORCEINLINE FCustomVector(float* InV) : X(InV[0]), Y(InV[1]), Z(InV[2]) {}
+		FORCEINLINE FCustomVector(float px, float py, float pz) :X(px), Y(py), Z(pz) {}
 		FCustomVector(const FCustomVector&) = default;
 
+		FORCEINLINE FCustomVector(const FVector& InFVector):X(InFVector.X),Y(InFVector.Y),Z(InFVector.Z){}
 		FORCEINLINE FCustomVector operator-(const FCustomVector& V) const{
 			return FCustomVector(X - V.X, Y - V.Y, Z - V.Z);
 		}
@@ -51,14 +53,20 @@ namespace NseRecastHelper
 		FORCEINLINE FCustomVector operator+(const float& V)const {
 			return FCustomVector(X + V, Y + V, Z + V);
 		}
-
+		FORCEINLINE FCustomVector GetAbs()const
+		{
+			return FCustomVector{ fabsf(X),fabsf(Y),fabsf(Z) };
+		}
 	};
+
 	static FCustomVector Recast2UnrealPoint(const FCustomVector& Vector);
 	static FCustomVector Unreal2RecastPoint(const FCustomVector& Vector);
 
-	static dtNavMesh* loadAll(const char* path);
-	static bool dtIsValidNagivationPoint(UWorld* InWorld,dtNavMesh* NavMeshData, const NseRecastHelper::FCustomVector& InPoint);
+	static dtNavMesh* DeSerializedtNavMesh(const char* path);
+	static bool dtIsValidNagivationPoint(UWorld* InWorld, dtNavMesh* NavMeshData, const NseRecastHelper::FCustomVector& InPoint, const NseRecastHelper::FCustomVector& InExtent = FCustomVector{10.f,10.f,10.f});
 	static dtNavMesh* LoadNavData(const char* Path);
+
+	static void SerializedtNavMesh(const char* path, const dtNavMesh* mesh);
 };
 
 /**
@@ -73,12 +81,12 @@ public:
 		static bool ExecExportNavMesh(const FString& SavePath);
 
 
-	UFUNCTION(BlueprintCallable,meta=(ContextObject="WorldContextObject"))
-		static bool IsValidNagivationPoint(UObject* WorldContextObject,const FVector& Point);
+	UFUNCTION(BlueprintCallable,BlueprintPure, meta = (WorldContext = "WorldContextObject"))
+		static bool IsValidNagivationPoint(UObject* WorldContextObject,const FVector& Point, const FVector InExtern=FVector::ZeroVector);
 	
 	UFUNCTION(BlueprintCallable)
 		static bool ExportNavData(const FString& InFilePath);
 
 	static dtNavMesh* GetdtNavMeshInsByWorld(UWorld* InWorld);
-	static void SaveNavMeshData(const char* path, const dtNavMesh* mesh);
+	
 };

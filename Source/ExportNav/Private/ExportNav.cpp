@@ -61,47 +61,57 @@ void FExportNavModule::ShutdownModule()
 
 void FExportNavModule::PluginButtonClicked()
 {
-	DoExportNavData();
-}
-
-void FExportNavModule::DoExportNavData()
-{
 	UWorld* World = GEditor->GetEditorWorldContext().World();
+	FString MapName = World->GetMapName();
+
 	IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
 	FString PluginPath = FPaths::ConvertRelativePathToFull(IPluginManager::Get().FindPlugin(TEXT("ExportNav"))->GetBaseDir());
+
+	FString OutPath;
 	if (DesktopPlatform)
 	{
-		TArray<FString> SaveFilenames;
-		FString SaveName= World->GetMapName()+FString(TEXT("-RecastNavMesh-"))+FDateTime::Now().ToString();
-		const bool bOpened = DesktopPlatform->SaveFileDialog(
+		const bool bOpened = DesktopPlatform->OpenDirectoryDialog(
 			nullptr,
-			LOCTEXT("SaveNav", "Save Navigation Data").ToString(),
-			FPaths::Combine(PluginPath, TEXT("RecastDemo/Meshes")),
-			SaveName,
-			TEXT("*.obj|*.obj"),
-			EFileDialogFlags::None,
-			SaveFilenames
+			LOCTEXT("SaveNav", "Save Recast Navigation NavMesh & NavData").ToString(),
+			PluginPath,
+			OutPath
 		);
-
-		if (SaveFilenames.Num() > 0)
+		if (FPaths::DirectoryExists(OutPath))
 		{
-			FString SaveToFole = FPaths::ConvertRelativePathToFull(SaveFilenames[0]);
-			UFlibExportNavData::ExecExportNavMesh(SaveToFole);
+			FString CurrentTime = FDateTime::Now().ToString();
+			FString NavMeshFile = FPaths::Combine(OutPath, MapName + TEXT("-NavMesh-") + CurrentTime+TEXT(".obj"));
+			DoExportNavMesh(NavMeshFile);
+			FString NavDataFile = FPaths::Combine(OutPath, MapName + TEXT("-NavData-") + CurrentTime+TEXT(".bin"));
+			DoExportNavData(NavDataFile);
 
-			
-			// FString RecastDemoProc = FPaths::Combine(PluginPath,TEXT("RecastDemo/RecastDemo.exe"));
-			/*FString EndCommand = TEXT("cmd /c start /D ") + RecastDemoProc;
-			system(TCHAR_TO_ANSI(*EndCommand));*/
-			// FPlatformProcess::CreateProc(*RecastDemoProc, NULL, false, false ,false, NULL, NULL, NULL, NULL);
+#if PLATFORM_WINDOWS
+			FString FinalCommdParas = TEXT("/e,/root,");
+			FString OpenPath = UFlibExportNavData::ConvPath_Slash2BackSlash(OutPath);
+			FinalCommdParas.Append(OpenPath);
+			FPlatformProcess::CreateProc(TEXT("explorer "), *FinalCommdParas, true, false, false, NULL, NULL, NULL, NULL, NULL);
+#endif
 		}
 	}
 	
-	
 }
+
+void FExportNavModule::DoExportNavMesh(const FString& SaveToFile)
+{
+	UFlibExportNavData::ExportRecastNavMesh(SaveToFile);
+}
+
+void FExportNavModule::DoExportNavData(const FString& SaveToFile)
+{
+	UFlibExportNavData::ExportRecastNavData(SaveToFile);
+
+}
+
 void FExportNavModule::AddMenuExtension(FMenuBuilder& Builder)
 {
 	Builder.AddMenuEntry(FExportNavCommands::Get().PluginAction);
 }
+
+
 
 void FExportNavModule::AddToolbarExtension(FToolBarBuilder& Builder)
 {

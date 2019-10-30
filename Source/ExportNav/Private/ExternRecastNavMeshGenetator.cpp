@@ -58,17 +58,24 @@ void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& Fi
 					{
 						IndexBuffer.Add(CachedGeometry.Indices[i] + CoordBuffer.Num() / 3);
 					}
-					for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i+=3)
+					//// Export unit centimeters
+					//for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i+=3)
+					//{
+					//	FVector Corrd = FVector{
+					//		CachedGeometry.Verts[i]/100.f,
+					//		CachedGeometry.Verts[i+2]/100.f,
+					//		CachedGeometry.Verts[i+1]/100.f,
+					//	};
+					//	// CoordBuffer.Add(CachedGeometry.Verts[i]);
+					//	CoordBuffer.Add(Corrd.X);
+					//	CoordBuffer.Add(Corrd.Z);
+					//	CoordBuffer.Add(Corrd.Y);
+					//}
+
+					//// Export unit meters
+					for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i++)
 					{
-						FVector Corrd = FVector{
-							CachedGeometry.Verts[i]/100.f,
-							CachedGeometry.Verts[i+2]/100.f,
-							CachedGeometry.Verts[i+1]/100.f,
-						};
-						// CoordBuffer.Add(CachedGeometry.Verts[i]);
-						CoordBuffer.Add(Corrd.X);
-						CoordBuffer.Add(Corrd.Z);
-						CoordBuffer.Add(Corrd.Y);
+						CoordBuffer.Add(CachedGeometry.Verts[i]);
 					}
 				}
 				else
@@ -210,7 +217,7 @@ void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& Fi
 
 			AdditionalData += FString::Printf(TEXT("\n"));
 
-			const FString FilePathName = FileName + TEXT(".obj");// FString::Printf(TEXT("_NavDataSet%d_%s.obj"), Index, *CurrentTimeStr);
+			const FString FilePathName = FileName;// FString::Printf(TEXT("_NavDataSet%d_%s.obj"), Index, *CurrentTimeStr);
 			ExportGeomToOBJFile(FilePathName, CoordBuffer, IndexBuffer, AdditionalData);
 		}
 	}

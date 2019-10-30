@@ -25,7 +25,10 @@ private:
 	void AddMenuExtension(FMenuBuilder& Builder);
 
 private:
-	void DoExportNavData();
+	// export bin file
+	void DoExportNavData(const FString& SaveToFile);
+	// export recast obj file
+	void DoExportNavMesh(const FString& SaveToFile);
 private:
 	TSharedPtr<class FUICommandList> PluginCommands;
 };

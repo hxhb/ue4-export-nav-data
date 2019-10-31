@@ -56,13 +56,13 @@ namespace UE4RecastHelper
 		}
 	};
 
-	static FCustomVector Recast2UnrealPoint(const FCustomVector& Vector);
-	static FCustomVector Unreal2RecastPoint(const FCustomVector& Vector);
+	FCustomVector Recast2UnrealPoint(const FCustomVector& Vector);
+	FCustomVector Unreal2RecastPoint(const FCustomVector& Vector);
 
-	static void SerializedtNavMesh(const char* path, const dtNavMesh* mesh);
-	static dtNavMesh* DeSerializedtNavMesh(const char* path);
+	void SerializedtNavMesh(const char* path, const dtNavMesh* mesh);
+	dtNavMesh* DeSerializedtNavMesh(const char* path);
 
-	static bool dtIsValidNagivationPoint(dtNavMesh* NavMeshData, const FCustomVector& InPoint, const FCustomVector& InExtent = FCustomVector{ 10.f,10.f,10.f });
+	bool dtIsValidNagivationPoint(dtNavMesh* InNavMeshData, const FCustomVector& InPoint, const FCustomVector& InExtent = FCustomVector{ 10.f,10.f,10.f });
 
 };
 

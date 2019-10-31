@@ -62,7 +62,7 @@ public class ExportNav : ModuleRules
         PublicDefinitions.AddRange(
                 new string[]
                 {
-                    // "EXPORT_NAV_PLUGIN_IN_UE4"
+                    "USE_DETOUR_BUILT_INTO_UE4"
                 }
             );
 	}

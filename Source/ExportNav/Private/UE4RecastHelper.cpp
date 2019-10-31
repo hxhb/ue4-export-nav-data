@@ -1,6 +1,7 @@
 #include "UE4RecastHelper.h"
 #include <cstring>
 #include <cstdio>
+#pragma warning (disable:4996)
 
 // #include "HACK_PRIVATE_MEMBER_UTILS.hpp"
 
@@ -19,10 +20,10 @@ bool UE4RecastHelper::dtIsValidNagivationPoint(dtNavMesh* InNavMeshData, const U
 
 
 	dtNavMeshQuery NavQuery;
-#ifdef EXPORT_NAV_PLUGIN_IN_UE4
+#ifdef USE_DETOUR_BUILT_INTO_UE4
 	dtQuerySpecialLinkFilter LinkFilter;
 	NavQuery.init(InNavMeshData, 0, &LinkFilter);
-	UE_LOG(LogTemp, Warning, TEXT("CALL NavQuery.init(InNavMeshData, 0, &LinkFilter);"));
+	// UE_LOG(LogTemp, Warning, TEXT("CALL NavQuery.init(InNavMeshData, 0, &LinkFilter);"));
 #else
 	NavQuery.init(InNavMeshData, 0);
 #endif
@@ -30,9 +31,9 @@ bool UE4RecastHelper::dtIsValidNagivationPoint(dtNavMesh* InNavMeshData, const U
 	dtPolyRef PolyRef;
 	dtQueryFilter QueryFilter;
 
-#ifdef EXPORT_NAV_PLUGIN_IN_UE4
+#ifdef USE_DETOUR_BUILT_INTO_UE4
 	NavQuery.findNearestPoly2D(&RcPoint.X, &RcExtent.X, &QueryFilter, &PolyRef, (float*)(&ClosestPoint));
-	UE_LOG(LogTemp, Warning, TEXT("CALL findNearestPoly2D"));
+	// UE_LOG(LogTemp, Warning, TEXT("CALL findNearestPoly2D"));
 #else
 	NavQuery.findNearestPoly(&RcPoint.X, &RcExtent.X, &QueryFilter, &PolyRef, (float*)(&ClosestPoint));
 #endif

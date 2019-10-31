@@ -15,9 +15,14 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "ExportNav",
-			"Type": "Runtime",
+			"Name": "ExportNavEditor",
+			"Type": "Editor",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ExportNavRuntime",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault"
 		}
 	]
 }

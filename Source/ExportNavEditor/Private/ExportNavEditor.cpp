@@ -1,10 +1,10 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
-#include "ExportNav.h"
-#include "FlibExportNavData.h"
+#include "ExportNavEditor.h"
 #include "ExportNavStyle.h"
 #include "ExportNavCommands.h"
 
+#include "FlibExportNavData.h"
 
 #include "Misc/MessageDialog.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
@@ -15,9 +15,9 @@
 
 static const FName ExportNavTabName("ExportNav");
 
-#define LOCTEXT_NAMESPACE "FExportNavModule"
+#define LOCTEXT_NAMESPACE "FExportNavEditorModule"
 
-void FExportNavModule::StartupModule()
+void FExportNavEditorModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 	
@@ -30,27 +30,27 @@ void FExportNavModule::StartupModule()
 
 	PluginCommands->MapAction(
 		FExportNavCommands::Get().PluginAction,
-		FExecuteAction::CreateRaw(this, &FExportNavModule::PluginButtonClicked),
+		FExecuteAction::CreateRaw(this, &FExportNavEditorModule::PluginButtonClicked),
 		FCanExecuteAction());
 		
 	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
 	
 	{
 		TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
-		MenuExtender->AddMenuExtension("WindowLayout", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FExportNavModule::AddMenuExtension));
+		MenuExtender->AddMenuExtension("WindowLayout", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FExportNavEditorModule::AddMenuExtension));
 
 		LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
 	}
 	
 	{
 		TSharedPtr<FExtender> ToolbarExtender = MakeShareable(new FExtender);
-		ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FExportNavModule::AddToolbarExtension));
+		ToolbarExtender->AddToolBarExtension("Settings", EExtensionHook::After, PluginCommands, FToolBarExtensionDelegate::CreateRaw(this, &FExportNavEditorModule::AddToolbarExtension));
 		
 		LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolbarExtender);
 	}
 }
 
-void FExportNavModule::ShutdownModule()
+void FExportNavEditorModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
@@ -59,7 +59,7 @@ void FExportNavModule::ShutdownModule()
 	FExportNavCommands::Unregister();
 }
 
-void FExportNavModule::PluginButtonClicked()
+void FExportNavEditorModule::PluginButtonClicked()
 {
 	UWorld* World = GEditor->GetEditorWorldContext().World();
 	FString MapName = World->GetMapName();
@@ -95,29 +95,29 @@ void FExportNavModule::PluginButtonClicked()
 	
 }
 
-void FExportNavModule::DoExportNavMesh(const FString& SaveToFile)
+void FExportNavEditorModule::DoExportNavMesh(const FString& SaveToFile)
 {
 	UFlibExportNavData::ExportRecastNavMesh(SaveToFile);
 }
 
-void FExportNavModule::DoExportNavData(const FString& SaveToFile)
+void FExportNavEditorModule::DoExportNavData(const FString& SaveToFile)
 {
 	UFlibExportNavData::ExportRecastNavData(SaveToFile);
 
 }
 
-void FExportNavModule::AddMenuExtension(FMenuBuilder& Builder)
+void FExportNavEditorModule::AddMenuExtension(FMenuBuilder& Builder)
 {
 	Builder.AddMenuEntry(FExportNavCommands::Get().PluginAction);
 }
 
 
 
-void FExportNavModule::AddToolbarExtension(FToolBarBuilder& Builder)
+void FExportNavEditorModule::AddToolbarExtension(FToolBarBuilder& Builder)
 {
 	Builder.AddToolBarButton(FExportNavCommands::Get().PluginAction);
 }
 
 #undef LOCTEXT_NAMESPACE
 	
-IMPLEMENT_MODULE(FExportNavModule, ExportNav)
+IMPLEMENT_MODULE(FExportNavEditorModule, ExportNavEditor)

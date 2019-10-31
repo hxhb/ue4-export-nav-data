@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class ExportNav : ModuleRules
+public class ExportNavRuntime : ModuleRules
 {
-	public ExportNav(ReadOnlyTargetRules Target) : base(Target)
+	public ExportNavRuntime(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
@@ -25,7 +25,7 @@ public class ExportNav : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core"
+				"Core",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -34,12 +34,6 @@ public class ExportNav : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-                "Core",
-                "Projects",
-                "DesktopPlatform",
-				"InputCore",
-				"UnrealEd",
-				"LevelEditor",
 				"CoreUObject",
 				"Engine",
 				"Slate",
@@ -58,8 +52,10 @@ public class ExportNav : ModuleRules
 			}
 			);
 
-        OptimizeCode = CodeOptimization.InShippingBuildsOnly;
-        PublicDefinitions.AddRange(
+
+		OptimizeCode = CodeOptimization.InShippingBuildsOnly;
+		
+		PublicDefinitions.AddRange(
                 new string[]
                 {
                     "USE_DETOUR_BUILT_INTO_UE4"

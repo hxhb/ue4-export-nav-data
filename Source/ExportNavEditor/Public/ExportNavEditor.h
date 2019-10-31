@@ -8,7 +8,7 @@
 class FToolBarBuilder;
 class FMenuBuilder;
 
-class FExportNavModule : public IModuleInterface
+class FExportNavEditorModule : public IModuleInterface
 {
 public:
 
@@ -27,7 +27,7 @@ private:
 private:
 	// export bin file
 	void DoExportNavData(const FString& SaveToFile);
-	// export recast obj file
+	// export recast obj file,Editor only
 	void DoExportNavMesh(const FString& SaveToFile);
 private:
 	TSharedPtr<class FUICommandList> PluginCommands;

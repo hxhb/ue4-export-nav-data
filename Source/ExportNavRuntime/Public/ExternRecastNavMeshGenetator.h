@@ -33,7 +33,7 @@ struct FExternRecastGeometryCache
 };
 
 
-class EXPORTNAV_API FExternExportNavMeshGenerator : public FRecastNavMeshGenerator
+class EXPORTNAVRUNTIME_API FExternExportNavMeshGenerator : public FRecastNavMeshGenerator
 {
 
 public:

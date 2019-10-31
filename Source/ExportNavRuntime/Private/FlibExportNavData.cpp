@@ -10,14 +10,30 @@
 #include "UE4RecastHelper.h"
 #include "dtNavMeshWrapper.h"
 
-
 bool UFlibExportNavData::ExportRecastNavMesh(const FString& SaveFile)
 {
+#if WITH_EDITOR
+	
 	FString FinalSaveFile=SaveFile;
 
-	UWorld* World = GEditor->GetEditorWorldContext(false).World();  
+	// UWorld* World = GEditor->GetEditorWorldContext(false).World();  
 
-	if (World->GetNavigationSystem())
+	UWorld* World=NULL;
+
+	auto WorldList = GEngine->GetWorldContexts();
+	for (int32 i=0;i < WorldList.Num();++i)
+	{
+		UWorld* local_World = WorldList[i].World();
+
+		if (UKismetSystemLibrary::IsValid(local_World) && local_World->WorldType == EWorldType::Editor)
+		{
+			World = local_World;
+			break;
+		}
+	
+	}
+
+	if (World && World->GetNavigationSystem())
 	{
 		if (ANavigationData* NavData = Cast<ANavigationData>(World->GetNavigationSystem()->GetMainNavData()))
 		{
@@ -34,11 +50,28 @@ bool UFlibExportNavData::ExportRecastNavMesh(const FString& SaveFile)
 		}
 	}
 	return false;
+#else
+	return false;
+#endif
 }
 
 bool UFlibExportNavData::ExportRecastNavData(const FString& InFilePath)
 {
-	UWorld* World = GEditor->GetEditorWorldContext(false).World();
+	// UWorld* World = GEditor->GetEditorWorldContext(false).World();
+	UWorld* World = NULL;
+
+	auto WorldList = GEngine->GetWorldContexts();
+	for (int32 i = 0; i < WorldList.Num(); ++i)
+	{
+		UWorld* local_World = WorldList[i].World();
+		if (local_World && UKismetSystemLibrary::IsValid(local_World))
+		{
+			World = local_World;
+			break;
+		}
+	}
+	if (!World) return false;
+
 	dtNavMesh* RecastdtNavMesh = UFlibExportNavData::GetdtNavMeshInsByWorld(World);
 
 	if (RecastdtNavMesh)

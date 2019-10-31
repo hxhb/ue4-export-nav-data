@@ -11,7 +11,7 @@
  * 
  */
 UCLASS(BlueprintType,Blueprintable)
-class EXPORTNAV_API UdtNavMeshWrapper : public UObject
+class EXPORTNAVRUNTIME_API UdtNavMeshWrapper : public UObject
 {
 	GENERATED_UCLASS_BODY()
 

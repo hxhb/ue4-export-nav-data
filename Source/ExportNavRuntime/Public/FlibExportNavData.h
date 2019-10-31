@@ -16,21 +16,21 @@
  * 
  */
 UCLASS()
-class EXPORTNAV_API UFlibExportNavData : public UBlueprintFunctionLibrary
+class EXPORTNAVRUNTIME_API UFlibExportNavData : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
+	// Editor only
 	UFUNCTION(Exec,BlueprintCallable)
 		static bool ExportRecastNavMesh(const FString& SavePath);
-
-	UFUNCTION(BlueprintCallable)
+	// Editor and Runtime
+	UFUNCTION(Exec,BlueprintCallable)
 		static bool ExportRecastNavData(const FString& InFilePath);
 
 	static dtNavMesh* GetdtNavMeshInsByWorld(UWorld* InWorld);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, meta = (WorldContext = "WorldContextObject"))
 		static bool IsValidNagivationPointByBinPATH(UObject* WorldContextObject,const FString& InNavBinPath, const FVector& Point, const FVector InExtern = FVector::ZeroVector);
-
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 		static bool IsValidNagivationPointByNavObj(class UdtNavMeshWrapper* InDtNavObject ,const FVector& Point, const FVector InExtern = FVector::ZeroVector);
 

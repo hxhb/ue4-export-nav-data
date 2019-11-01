@@ -62,7 +62,7 @@ namespace UE4RecastHelper
 	void SerializedtNavMesh(const char* path, const dtNavMesh* mesh);
 	dtNavMesh* DeSerializedtNavMesh(const char* path);
 
-	bool dtIsValidNagivationPoint(dtNavMesh* InNavMeshData, const FCustomVector& InPoint, const FCustomVector& InExtent = FCustomVector{ 10.f,10.f,10.f });
+	bool dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const FCustomVector& InPoint, const FCustomVector& InExtent = FCustomVector{ 10.f,10.f,10.f });
 
 };
 

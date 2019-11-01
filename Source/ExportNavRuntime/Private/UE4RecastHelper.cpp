@@ -5,7 +5,7 @@
 
 // #include "HACK_PRIVATE_MEMBER_UTILS.hpp"
 
-bool UE4RecastHelper::dtIsValidNagivationPoint(dtNavMesh* InNavMeshData, const UE4RecastHelper::FCustomVector& InPoint, const UE4RecastHelper::FCustomVector& InExtent)
+bool UE4RecastHelper::dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const UE4RecastHelper::FCustomVector& InPoint, const UE4RecastHelper::FCustomVector& InExtent)
 {
 	bool bSuccess = false;
 
@@ -171,12 +171,18 @@ dtNavMesh* UE4RecastHelper::DeSerializedtNavMesh(const char* path)
 	return mesh;
 }
 
-UE4RecastHelper::FCustomVector UE4RecastHelper::Recast2UnrealPoint(const FCustomVector& Vector)
-{
-	return FCustomVector(-Vector.X, -Vector.Z, Vector.Y);
-}
 
-UE4RecastHelper::FCustomVector UE4RecastHelper::Unreal2RecastPoint(const FCustomVector& Vector)
+
+
+namespace UE4RecastHelper
 {
-	return FCustomVector(-Vector.X, Vector.Z, -Vector.Y);
-}
+	FCustomVector Recast2UnrealPoint(const FCustomVector& Vector)
+	{
+		return FCustomVector(-Vector.X, -Vector.Z, Vector.Y);
+	}
+
+	FCustomVector Unreal2RecastPoint(const FCustomVector& Vector)
+	{
+		return FCustomVector(-Vector.X, Vector.Z, -Vector.Y);
+	}
+};

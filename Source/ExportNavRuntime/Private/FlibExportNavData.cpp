@@ -97,7 +97,23 @@ dtNavMesh* UFlibExportNavData::GetdtNavMeshInsByWorld(UWorld* InWorld)
 	return RecastdtNavMesh;
 }
 
-bool UFlibExportNavData::IsValidNagivationPointByNavObj(UdtNavMeshWrapper* InDtNavObject, const FVector& Point, const FVector InExtern)
+bool UFlibExportNavData::IsValidNavigvationPointInWorld(UObject* WorldContextObject, const FVector& Point, const FVector InExtern /*= FVector::ZeroVector*/)
+{
+	bool rSuccess = false;
+
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+	dtNavMesh* NavMeshData = UFlibExportNavData::GetdtNavMeshInsByWorld(World);
+
+	if (NavMeshData)
+	{
+		rSuccess = UE4RecastHelper::dtIsValidNavigationPoint(NavMeshData, UFlibExportNavData::FVector2FCustomVec(Point), UFlibExportNavData::FVector2FCustomVec(InExtern));
+		dtFreeNavMesh(NavMeshData);
+	}
+
+	return rSuccess;
+}
+
+bool UFlibExportNavData::IsValidNavigationPointInNavObj(UdtNavMeshWrapper* InDtNavObject, const FVector& Point, const FVector InExtern)
 {
 	bool rSuccess = false;
 
@@ -106,14 +122,14 @@ bool UFlibExportNavData::IsValidNagivationPointByNavObj(UdtNavMeshWrapper* InDtN
 		dtNavMesh* NavMeshData = InDtNavObject->GetNavData();
 		if (NavMeshData)
 		{
-			rSuccess = UE4RecastHelper::dtIsValidNagivationPoint(NavMeshData, UFlibExportNavData::FVector2FCustomVec(Point), UFlibExportNavData::FVector2FCustomVec(InExtern));
+			rSuccess = UE4RecastHelper::dtIsValidNavigationPoint(NavMeshData, UFlibExportNavData::FVector2FCustomVec(Point), UFlibExportNavData::FVector2FCustomVec(InExtern));
 		}
 	}
 
 	return rSuccess;
 }
 
-bool UFlibExportNavData::IsValidNagivationPointByBinPATH(UObject* WorldContextObject, const FString& InNavBinPath,const FVector& Point, const FVector InExtern /*= FVector::ZeroVector*/)
+bool UFlibExportNavData::IsValidNavigationPointInNavbin(const FString& InNavBinPath,const FVector& Point, const FVector InExtern)
 {
 	bool rSuccess = false;
 	
@@ -121,12 +137,10 @@ bool UFlibExportNavData::IsValidNagivationPointByBinPATH(UObject* WorldContextOb
 		return false;
 
 	dtNavMesh* NavMeshData = UE4RecastHelper::DeSerializedtNavMesh(TCHAR_TO_ANSI(*InNavBinPath));
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
-	// dtNavMesh* NavMeshData = UFlibExportNavData::GetdtNavMeshInsByWorld(World);
 		
 	if (NavMeshData)
 	{
-		rSuccess = UE4RecastHelper::dtIsValidNagivationPoint(NavMeshData, UFlibExportNavData::FVector2FCustomVec(Point), UFlibExportNavData::FVector2FCustomVec(InExtern));
+		rSuccess = UE4RecastHelper::dtIsValidNavigationPoint(NavMeshData, UFlibExportNavData::FVector2FCustomVec(Point), UFlibExportNavData::FVector2FCustomVec(InExtern));
 		dtFreeNavMesh(NavMeshData);
 	}
 	

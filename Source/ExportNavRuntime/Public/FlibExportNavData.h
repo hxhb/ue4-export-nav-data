@@ -30,9 +30,11 @@ public:
 	static dtNavMesh* GetdtNavMeshInsByWorld(UWorld* InWorld);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, meta = (WorldContext = "WorldContextObject"))
-		static bool IsValidNagivationPointByBinPATH(UObject* WorldContextObject,const FString& InNavBinPath, const FVector& Point, const FVector InExtern = FVector::ZeroVector);
+		static bool IsValidNavigvationPointInWorld(UObject* WorldContextObject, const FVector& Point, const FVector InExtern = FVector::ZeroVector);
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-		static bool IsValidNagivationPointByNavObj(class UdtNavMeshWrapper* InDtNavObject ,const FVector& Point, const FVector InExtern = FVector::ZeroVector);
+		static bool IsValidNavigationPointInNavbin(const FString& InNavBinPath, const FVector& Point, const FVector InExtern = FVector::ZeroVector);
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+		static bool IsValidNavigationPointInNavObj(class UdtNavMeshWrapper* InDtNavObject ,const FVector& Point, const FVector InExtern = FVector::ZeroVector);
 
 	FORCEINLINE static FVector FCustomVec2FVector(const UE4RecastHelper::FCustomVector& InCustomVector)
 	{

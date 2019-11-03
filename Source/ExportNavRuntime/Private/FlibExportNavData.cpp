@@ -93,8 +93,12 @@ dtNavMesh* UFlibExportNavData::GetdtNavMeshInsByWorld(UWorld* InWorld)
 	check(NavSys);
 	ANavigationData* MainNavDataIns = NavSys->GetDefaultNavDataInstance();
 	ARecastNavMesh* RecastNavMeshIns = Cast<ARecastNavMesh>(MainNavDataIns);
-	dtNavMesh* RecastdtNavMesh = RecastNavMeshIns->GetRecastMesh();
-	return RecastdtNavMesh;
+	if(RecastNavMeshIns && UKismetSystemLibrary::IsValid(RecastNavMeshIns))
+	{
+		dtNavMesh* RecastdtNavMesh = RecastNavMeshIns->GetRecastMesh();
+		return RecastdtNavMesh;
+	}
+	return NULL;
 }
 
 bool UFlibExportNavData::IsValidNavigvationPointInWorld(UObject* WorldContextObject, const FVector& Point, const FVector InExtern /*= FVector::ZeroVector*/)

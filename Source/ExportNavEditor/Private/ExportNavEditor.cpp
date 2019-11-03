@@ -62,6 +62,13 @@ void FExportNavEditorModule::ShutdownModule()
 void FExportNavEditorModule::PluginButtonClicked()
 {
 	UWorld* World = GEditor->GetEditorWorldContext().World();
+
+	if (!UFlibExportNavData::GetdtNavMeshInsByWorld(World))
+	{
+		NotFountAnyValidNavDataMsg();
+		return;
+	}
+
 	FString MapName = World->GetMapName();
 
 	IDesktopPlatform* DesktopPlatform = FDesktopPlatformModule::Get();
@@ -98,6 +105,16 @@ void FExportNavEditorModule::PluginButtonClicked()
 void FExportNavEditorModule::DoExportNavMesh(const FString& SaveToFile)
 {
 	UFlibExportNavData::ExportRecastNavMesh(SaveToFile);
+}
+
+void FExportNavEditorModule::NotFountAnyValidNavDataMsg()
+{
+	UWorld* World = GEditor->GetEditorWorldContext().World();
+	FText DialogText = FText::Format(
+		LOCTEXT("NotFoundValidNavDialogText", "Not found any valid Navigation data in {0} Map!"),
+		FText::FromString(World->GetMapName())
+	);
+	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
 }
 
 void FExportNavEditorModule::DoExportNavData(const FString& SaveToFile)

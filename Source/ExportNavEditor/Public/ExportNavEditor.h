@@ -29,6 +29,9 @@ private:
 	void DoExportNavData(const FString& SaveToFile);
 	// export recast obj file,Editor only
 	void DoExportNavMesh(const FString& SaveToFile);
+
+	// if not fount any valid navigation data,show the message
+	void NotFountAnyValidNavDataMsg();
 private:
 	TSharedPtr<class FUICommandList> PluginCommands;
 };

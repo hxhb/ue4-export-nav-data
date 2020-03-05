@@ -1,10 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Lipeng Zha, Inc. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "DetourNavMesh.h"
+#include "Detour/DetourNavMesh.h"
 #include "dtNavMeshWrapper.generated.h"
 
 /**
@@ -17,9 +17,9 @@ class EXPORTNAVRUNTIME_API UdtNavMeshWrapper : public UObject
 
 	virtual ~UdtNavMeshWrapper()override;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable,Category="ExportNav")
 	UdtNavMeshWrapper* LoadNavData(const FString& NavDataBinPath=TEXT(""));
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable,Category="ExportNav")
 		bool IsAvailableNavData()const;
 
 	dtNavMesh* GetNavData()const;

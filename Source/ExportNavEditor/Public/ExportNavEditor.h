@@ -1,4 +1,4 @@
-// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
+// Copyright 2019 Lipeng Zha, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -32,6 +32,9 @@ private:
 
 	// if not fount any valid navigation data,show the message
 	void NotFountAnyValidNavDataMsg();
+
+	static void CreateSaveFileNotify(const FText& InMsg, const FString& InSavedFile);
+
 private:
 	TSharedPtr<class FUICommandList> PluginCommands;
 };

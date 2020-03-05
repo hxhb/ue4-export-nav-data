@@ -1,11 +1,13 @@
+// Copyright 2019 Lipeng Zha, Inc. All Rights Reserved.
+
 #include "ExternRecastNavMeshGenetator.h"
 #include "Navmesh/RecastHelpers.h"
-#include "Runtime/Core/Public/GenericPlatform/GenericPlatform.h"
-#include "Runtime/Navmesh/Public/Detour/DetourNavMesh.h"
-#include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
+#include "GenericPlatform/GenericPlatform.h"
+#include "Detour/DetourNavMesh.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "NavigationSystem.h"
-#include "RecastNavMeshGenerator.h"
-
+#include "HAL/FileManager.h"
+#include "HAL/FileManagerGeneric.h"
 
 FExternRecastGeometryCache::FExternRecastGeometryCache(const uint8* Memory)
 {
@@ -59,24 +61,24 @@ void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& Fi
 						IndexBuffer.Add(CachedGeometry.Indices[i] + CoordBuffer.Num() / 3);
 					}
 					//// Export unit centimeters
-					//for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i+=3)
-					//{
-					//	FVector Corrd = FVector{
-					//		CachedGeometry.Verts[i]/100.f,
-					//		CachedGeometry.Verts[i+2]/100.f,
-					//		CachedGeometry.Verts[i+1]/100.f,
-					//	};
-					//	// CoordBuffer.Add(CachedGeometry.Verts[i]);
-					//	CoordBuffer.Add(Corrd.X);
-					//	CoordBuffer.Add(Corrd.Z);
-					//	CoordBuffer.Add(Corrd.Y);
-					//}
+					for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i+=3)
+					{
+						FVector Corrd = FVector{
+							CachedGeometry.Verts[i]/100.f,
+							CachedGeometry.Verts[i+2]/100.f,
+							CachedGeometry.Verts[i+1]/100.f,
+						};
+						// CoordBuffer.Add(CachedGeometry.Verts[i]);
+						CoordBuffer.Add(Corrd.X);
+						CoordBuffer.Add(Corrd.Z);
+						CoordBuffer.Add(Corrd.Y);
+					}
 
 					//// Export unit meters
-					for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i++)
-					{
-						CoordBuffer.Add(CachedGeometry.Verts[i]);
-					}
+					// for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i++)
+					// {
+					// 	CoordBuffer.Add(CachedGeometry.Verts[i]);
+					// }
 				}
 				else
 

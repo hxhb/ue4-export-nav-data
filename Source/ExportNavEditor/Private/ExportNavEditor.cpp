@@ -1,4 +1,4 @@
-// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
+// Copyright 2019 Lipeng Zha, Inc. All Rights Reserved.
 
 #include "ExportNavEditor.h"
 #include "ExportNavStyle.h"
@@ -12,6 +12,8 @@
 #include "LevelEditor.h"
 #include "HAL/FileManager.h"
 #include "Interfaces/IPluginManager.h"
+#include "Framework/Notifications/NotificationManager.h"
+#include "Widgets/Notifications/SNotificationList.h"
 
 static const FName ExportNavTabName("ExportNav");
 
@@ -91,15 +93,18 @@ void FExportNavEditorModule::PluginButtonClicked()
 			FString NavDataFile = FPaths::Combine(OutPath, MapName + TEXT("-NavData-") + CurrentTime+TEXT(".bin"));
 			DoExportNavData(NavDataFile);
 
-#if PLATFORM_WINDOWS
-			FString FinalCommdParas = TEXT("/e,/root,");
-			FString OpenPath = UFlibExportNavData::ConvPath_Slash2BackSlash(OutPath);
-			FinalCommdParas.Append(OpenPath);
-			FPlatformProcess::CreateProc(TEXT("explorer "), *FinalCommdParas, true, false, false, NULL, NULL, NULL, NULL, NULL);
-#endif
+//#if PLATFORM_WINDOWS
+//			FString FinalCommdParas = TEXT("/e,/root,");
+//			FString OpenPath = UFlibExportNavData::ConvPath_Slash2BackSlash(OutPath);
+//			FinalCommdParas.Append(OpenPath);
+//			FPlatformProcess::CreateProc(TEXT("explorer "), *FinalCommdParas, true, false, false, NULL, NULL, NULL, NULL, NULL);
+//#endif
+			FText NavDataMsg = LOCTEXT("SaveNavMeshData", "Successd to Export the RecastNavigation data.");
+			CreateSaveFileNotify(NavDataMsg, NavDataFile);
+			FText NavMeshMsg = LOCTEXT("SaveNavMeshMesh", "Successd to Export the NavMesh.");
+			CreateSaveFileNotify(NavMeshMsg, NavMeshFile);
 		}
 	}
-	
 }
 
 void FExportNavEditorModule::DoExportNavMesh(const FString& SaveToFile)
@@ -115,6 +120,28 @@ void FExportNavEditorModule::NotFountAnyValidNavDataMsg()
 		FText::FromString(World->GetMapName())
 	);
 	FMessageDialog::Open(EAppMsgType::Ok, DialogText);
+}
+
+void FExportNavEditorModule::CreateSaveFileNotify(const FText& InMsg, const FString& InSavedFile)
+{
+	auto Message = InMsg;
+	FNotificationInfo Info(Message);
+	Info.bFireAndForget = true;
+	Info.ExpireDuration = 5.0f;
+	Info.bUseSuccessFailIcons = false;
+	Info.bUseLargeFont = false;
+
+	const FString HyperLinkText = InSavedFile;
+	Info.Hyperlink = FSimpleDelegate::CreateStatic(
+		[](FString SourceFilePath)
+	{
+		FPlatformProcess::ExploreFolder(*SourceFilePath);
+	},
+		HyperLinkText
+		);
+	Info.HyperlinkText = FText::FromString(HyperLinkText);
+
+	FSlateNotificationManager::Get().AddNotification(Info)->SetCompletionState(SNotificationItem::CS_Success);
 }
 
 void FExportNavEditorModule::DoExportNavData(const FString& SaveToFile)

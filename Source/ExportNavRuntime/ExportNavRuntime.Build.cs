@@ -58,7 +58,7 @@ public class ExportNavRuntime : ModuleRules
 		PublicDefinitions.AddRange(
                 new string[]
                 {
-                    "USE_DETOUR_BUILT_INTO_UE4"
+                    // "USE_DETOUR_BUILT_INTO_UE4"
                 }
             );
 	}

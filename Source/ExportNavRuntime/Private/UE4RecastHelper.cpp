@@ -1,3 +1,5 @@
+// Copyright 2019 Lipeng Zha, Inc. All Rights Reserved.
+
 #include "UE4RecastHelper.h"
 #include <cstring>
 #include <cstdio>
@@ -5,7 +7,7 @@
 
 // #include "HACK_PRIVATE_MEMBER_UTILS.hpp"
 
-bool UE4RecastHelper::dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const UE4RecastHelper::FCustomVector& InPoint, const UE4RecastHelper::FCustomVector& InExtent)
+bool UE4RecastHelper::dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const UE4RecastHelper::FVector3& InPoint, const UE4RecastHelper::FVector3& InExtent)
 {
 	bool bSuccess = false;
 
@@ -13,10 +15,10 @@ bool UE4RecastHelper::dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const U
 
 	if (!InNavMeshData) return bSuccess;
 
-	FCustomVector RcPoint = UE4RecastHelper::Unreal2RecastPoint(InPoint);
-	const FCustomVector ModifiedExtent = InExtent;
-	FCustomVector RcExtent = UE4RecastHelper::Unreal2RecastPoint(ModifiedExtent).GetAbs();
-	FCustomVector ClosestPoint;
+	FVector3 RcPoint = UE4RecastHelper::Unreal2RecastPoint(InPoint);
+	const FVector3 ModifiedExtent = InExtent;
+	FVector3 RcExtent = UE4RecastHelper::Unreal2RecastPoint(ModifiedExtent).GetAbs();
+	FVector3 ClosestPoint;
 
 
 	dtNavMeshQuery NavQuery;
@@ -37,10 +39,12 @@ bool UE4RecastHelper::dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const U
 #else
 	NavQuery.findNearestPoly(&RcPoint.X, &RcExtent.X, &QueryFilter, &PolyRef, (float*)(&ClosestPoint));
 #endif
+
+	UE_LOG(LogTemp, Log, TEXT("dtIsValidNavigationPoint PolyRef is %ud."), PolyRef);
 	if (PolyRef > 0)
 	{
-		const FCustomVector& UnrealClosestPoint = UE4RecastHelper::Recast2UnrealPoint(ClosestPoint);
-		const FCustomVector ClosestPointDelta = UnrealClosestPoint - InPoint;
+		const FVector3& UnrealClosestPoint = UE4RecastHelper::Recast2UnrealPoint(ClosestPoint);
+		const FVector3 ClosestPointDelta = UnrealClosestPoint - InPoint;
 		if (-ModifiedExtent.X <= ClosestPointDelta.X && ClosestPointDelta.X <= ModifiedExtent.X
 			&& -ModifiedExtent.Y <= ClosestPointDelta.Y && ClosestPointDelta.Y <= ModifiedExtent.Y
 			&& -ModifiedExtent.Z <= ClosestPointDelta.Z && ClosestPointDelta.Z <= ModifiedExtent.Z)
@@ -50,6 +54,73 @@ bool UE4RecastHelper::dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const U
 	}
 
 	return bSuccess;
+}
+
+#include "DetourNavMeshQuery.h"
+static const long RCN_NAVMESH_VERSION = 1;
+static const int INVALID_NAVMESH_POLYREF = 0;
+static const int MAX_POLYS = 256;
+static const int NAV_ERROR_NEARESTPOLY = -2;
+
+int UE4RecastHelper::findStraightPath(dtNavMesh* InNavMeshData, dtNavMeshQuery* InNavmeshQuery, const FVector3& start, const FVector3& end, std::vector<FVector3>& paths)
+{
+	bool bSuccess = false;
+
+	using namespace UE4RecastHelper;
+
+	if (!InNavMeshData) return bSuccess;
+
+	FVector3 RcStart = UE4RecastHelper::Unreal2RecastPoint(start);
+	FVector3 RcEnd = UE4RecastHelper::Unreal2RecastPoint(end);
+	FVector3 RcExtent{ 10.f,10.f,10.f };
+
+	dtNavMeshQuery NavQuery;
+#ifdef USE_DETOUR_BUILT_INTO_UE4
+	dtQuerySpecialLinkFilter LinkFilter;
+	NavQuery.init(InNavMeshData, 0, &LinkFilter);
+	// UE_LOG(LogTemp, Warning, TEXT("CALL NavQuery.init(InNavMeshData, 0, &LinkFilter);"));
+#else
+	NavQuery.init(InNavMeshData, 0);
+#endif
+
+
+	FVector3 StartClosestPoint;
+	FVector3 EndClosestPoint;
+
+	dtPolyRef StartPolyRef;
+	dtPolyRef EndPolyRef;
+	dtQueryFilter QueryFilter;
+
+#ifdef USE_DETOUR_BUILT_INTO_UE4
+	NavQuery.findNearestPoly2D(&RcStart.X, &RcExtent.X, &QueryFilter, &StartPolyRef, (float*)(&StartClosestPoint));
+	// UE_LOG(LogTemp, Warning, TEXT("CALL findNearestPoly2D"));
+#else
+	NavQuery.findNearestPoly(&RcStart.X, &RcExtent.X, &QueryFilter, &StartPolyRef, (float*)(&StartClosestPoint));
+#endif
+
+#ifdef USE_DETOUR_BUILT_INTO_UE4
+	NavQuery.findNearestPoly2D(&RcEnd.X, &RcExtent.X, &QueryFilter, &EndPolyRef, (float*)(&EndClosestPoint));
+	// UE_LOG(LogTemp, Warning, TEXT("CALL findNearestPoly2D"));
+#else
+	NavQuery.findNearestPoly(&RcEnd.X, &RcExtent.X, &QueryFilter, &EndPolyRef, (float*)(&EndClosestPoint));
+#endif
+
+
+	UE_LOG(LogTemp, Log, TEXT("FindDetourPath StartPolyRef is %u."), StartPolyRef);
+	UE_LOG(LogTemp, Log, TEXT("FindDetourPath EndPolyRef is %u."), EndPolyRef);
+
+	UE_LOG(LogTemp, Log, TEXT("FindDetourPath StartClosestPoint is %s."), *FVector(StartClosestPoint.X,StartClosestPoint.Y,StartClosestPoint.Z).ToString());
+	UE_LOG(LogTemp, Log, TEXT("FindDetourPath EndClosestPoint is %s."), *FVector(EndClosestPoint.X, EndClosestPoint.Y, EndClosestPoint.Z).ToString());
+
+
+	dtQueryResult Result;
+	dtStatus FindPathStatus = NavQuery.findPath(StartPolyRef, EndPolyRef, (float*)(&StartClosestPoint), (float*)(&EndClosestPoint), &QueryFilter, Result, NULL);
+	UE_LOG(LogTemp, Log, TEXT("FindDetourPath FindPath return status is %u."), FindPathStatus);
+
+	UE_LOG(LogTemp, Log, TEXT("FindDetourPath dtQueryResult size is %u."), Result.size());
+
+//	InNavmeshQuery->findStraightPath(&StartNearestPt.X, &EndNearestPt.X, );
+	return 0;
 }
 
 // DECL_HACK_PRIVATE_NOCONST_FUNCTION(dtNavMesh, getTile, dtMeshTile*, int);
@@ -176,13 +247,13 @@ dtNavMesh* UE4RecastHelper::DeSerializedtNavMesh(const char* path)
 
 namespace UE4RecastHelper
 {
-	FCustomVector Recast2UnrealPoint(const FCustomVector& Vector)
+	FVector3 Recast2UnrealPoint(const FVector3& Vector)
 	{
-		return FCustomVector(-Vector.X, -Vector.Z, Vector.Y);
+		return FVector3(-Vector.X, -Vector.Z, Vector.Y);
 	}
 
-	FCustomVector Unreal2RecastPoint(const FCustomVector& Vector)
+	FVector3 Unreal2RecastPoint(const FVector3& Vector)
 	{
-		return FCustomVector(-Vector.X, Vector.Z, -Vector.Y);
+		return FVector3(-Vector.X, Vector.Z, -Vector.Y);
 	}
 };

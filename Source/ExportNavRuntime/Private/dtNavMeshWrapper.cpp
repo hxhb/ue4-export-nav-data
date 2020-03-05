@@ -1,9 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2019 Lipeng Zha, Inc. All Rights Reserved.
 
 
 #include "dtNavMeshWrapper.h"
-#include "DetourNavMesh.h"
+#include "Detour/DetourNavMesh.h"
 #include "UE4RecastHelper.h"
+#include "Misc/Paths.h"
 
 UdtNavMeshWrapper::UdtNavMeshWrapper(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer),NavmeshIns(NULL)

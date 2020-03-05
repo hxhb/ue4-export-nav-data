@@ -1,3 +1,4 @@
+// Copyright 2019 Lipeng Zha, Inc. All Rights Reserved.
 
 #ifndef UE4_RECAST_HELPER__
 #define UE4_RECAST_HELPER__
@@ -7,6 +8,7 @@
 #include "Detour/DetourNavMeshQuery.h"
 #include <math.h>
 #include <inttypes.h>
+#include <vector>
 
 namespace UE4RecastHelper
 {
@@ -27,43 +29,44 @@ namespace UE4RecastHelper
 	static const int NAVMESHSET_MAGIC = 'M' << 24 | 'S' << 16 | 'E' << 8 | 'T'; //'MSET';
 	static const int NAVMESHSET_VERSION = 1;
 
-	struct FCustomVector
+	struct FVector3
 	{
 		float X;
 		float Y;
 		float Z;
 	public:
-		inline FCustomVector() :X(0.f), Y(0.f), Z(0.f) {}
-		inline FCustomVector(float* InV) : X(InV[0]), Y(InV[1]), Z(InV[2]) {}
-		inline FCustomVector(float px, float py, float pz) : X(px), Y(py), Z(pz) {}
-		FCustomVector(const FCustomVector&) = default;
+		inline FVector3() :X(0.f), Y(0.f), Z(0.f) {}
+		inline FVector3(float* InV) : X(InV[0]), Y(InV[1]), Z(InV[2]) {}
+		inline FVector3(float px, float py, float pz) : X(px), Y(py), Z(pz) {}
+		FVector3(const FVector3&) = default;
 
-		inline FCustomVector operator-(const FCustomVector& V) const {
-			return FCustomVector(X - V.X, Y - V.Y, Z - V.Z);
+		inline FVector3 operator-(const FVector3& V) const {
+			return FVector3(X - V.X, Y - V.Y, Z - V.Z);
 		}
-		inline FCustomVector operator+(const FCustomVector& V)const {
-			return FCustomVector(X + V.X, Y + V.Y, Z + V.Z);
+		inline FVector3 operator+(const FVector3& V)const {
+			return FVector3(X + V.X, Y + V.Y, Z + V.Z);
 		}
-		inline FCustomVector operator-(const float& V)const {
-			return FCustomVector(X - V, Y - V, Z - V);
+		inline FVector3 operator-(const float& V)const {
+			return FVector3(X - V, Y - V, Z - V);
 		}
-		inline FCustomVector operator+(const float& V)const {
-			return FCustomVector(X + V, Y + V, Z + V);
+		inline FVector3 operator+(const float& V)const {
+			return FVector3(X + V, Y + V, Z + V);
 		}
-		inline FCustomVector GetAbs()const
+		inline FVector3 GetAbs()const
 		{
-			return FCustomVector{ fabsf(X),fabsf(Y),fabsf(Z) };
+			return FVector3{ fabsf(X),fabsf(Y),fabsf(Z) };
 		}
 	};
 
-	FCustomVector Recast2UnrealPoint(const FCustomVector& Vector);
-	FCustomVector Unreal2RecastPoint(const FCustomVector& Vector);
+	FVector3 Recast2UnrealPoint(const FVector3& Vector);
+	FVector3 Unreal2RecastPoint(const FVector3& Vector);
 
 	void SerializedtNavMesh(const char* path, const dtNavMesh* mesh);
 	dtNavMesh* DeSerializedtNavMesh(const char* path);
 
-	bool dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const FCustomVector& InPoint, const FCustomVector& InExtent = FCustomVector{ 10.f,10.f,10.f });
+	bool dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const FVector3& InPoint, const FVector3& InExtent = FVector3{ 10.f,10.f,10.f });
 
+	int findStraightPath(dtNavMesh* InNavMeshData, dtNavMeshQuery* InNavmeshQuery, const FVector3& start, const FVector3& end, std::vector<FVector3>& paths);
 };
 
 

@@ -72,10 +72,8 @@ namespace UE4RecastHelper
 	void SerializedtNavMesh(const char* path, const dtNavMesh* mesh);
 	dtNavMesh* DeSerializedtNavMesh(const char* path);
 
-	bool dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const FVector3& InPoint, const FVector3& InExtent = FVector3{ 10.f,10.f,10.f });
-
-	int findStraightPath(dtNavMesh* InNavMeshData, dtNavMeshQuery* InNavmeshQuery, const FVector3& start, const FVector3& end, std::vector<FVector3>& paths);
-
+	static int findStraightPath(dtNavMesh* InNavMeshData, dtNavMeshQuery* InNavmeshQuery, const FVector3& start, const FVector3& end, std::vector<FVector3>& paths);
+	static bool dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const FVector3& InPoint, const FVector3& InExtent = FVector3{ 10.f,10.f,10.f });
 	static bool GetRandomPointInRadius(dtNavMeshQuery* InNavmeshQuery, dtQueryFilter* InQueryFilter,const FVector3& InOrigin,const FVector3& InRedius,FVector3& OutPoint);
 };
 

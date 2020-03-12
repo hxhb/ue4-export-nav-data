@@ -11,7 +11,7 @@ static const long RCN_NAVMESH_VERSION = 1;
 static const int INVALID_NAVMESH_POLYREF = 0;
 static const int MAX_POLYS = 256;
 static const int NAV_ERROR_NEARESTPOLY = -2;
-
+#pragma warning (disable:4996)
 
 bool UE4RecastHelper::dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const UE4RecastHelper::FVector3& InPoint, const UE4RecastHelper::FVector3& InExtent)
 {
@@ -41,12 +41,11 @@ bool UE4RecastHelper::dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const U
 
 #ifdef USE_DETOUR_BUILT_INTO_UE4
 	NavQuery.findNearestPoly2D(&RcPoint.X, &RcExtent.X, &QueryFilter, &PolyRef, (float*)(&ClosestPoint));
-	// UE_LOG(LogTemp, Warning, TEXT("CALL findNearestPoly2D"));
+	UE_LOG(LogTemp, Log, TEXT("dtIsValidNavigationPoint PolyRef is %ud."), PolyRef);
 #else
 	NavQuery.findNearestPoly(&RcPoint.X, &RcExtent.X, &QueryFilter, &PolyRef, (float*)(&ClosestPoint));
 #endif
 
-	UE_LOG(LogTemp, Log, TEXT("dtIsValidNavigationPoint PolyRef is %ud."), PolyRef);
 	if (PolyRef > 0)
 	{
 		const FVector3& UnrealClosestPoint = UE4RecastHelper::Recast2UnrealPoint(ClosestPoint);
@@ -276,9 +275,6 @@ dtNavMesh* UE4RecastHelper::DeSerializedtNavMesh(const char* path)
 
 	return mesh;
 }
-
-
-
 
 namespace UE4RecastHelper
 {

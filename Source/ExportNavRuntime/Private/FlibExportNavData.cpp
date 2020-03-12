@@ -14,6 +14,9 @@
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 
+DECLARE_STATS_GROUP(TEXT("ExportNav"), STATGROUP_ExportNav, STATCAT_Advanced);
+DECLARE_CYCLE_STAT(TEXT("ExportNav"), STAT_ExportNav, STATGROUP_ExportNav);
+
 bool UFlibExportNavData::ExportRecastNavMesh(const FString& SaveFile)
 {
 #if WITH_EDITOR
@@ -112,7 +115,7 @@ bool UFlibExportNavData::IsValidNavigvationPointInWorld(UObject* WorldContextObj
 
 	if (NavMeshData)
 	{
-		rSuccess = UE4RecastHelper::dtIsValidNavigationPoint(NavMeshData, UFlibExportNavData::FVector2FCustomVec(Point), UFlibExportNavData::FVector2FCustomVec(InExtern));
+		rSuccess = UE4RecastHelper::dtIsValidNavigationPoint(NavMeshData, Point, InExtern);
 		dtFreeNavMesh(NavMeshData);
 	}
 
@@ -128,7 +131,7 @@ bool UFlibExportNavData::IsValidNavigationPointInNavObj(UdtNavMeshWrapper* InDtN
 		dtNavMesh* NavMeshData = InDtNavObject->GetNavData();
 		if (NavMeshData)
 		{
-			rSuccess = UE4RecastHelper::dtIsValidNavigationPoint(NavMeshData, UFlibExportNavData::FVector2FCustomVec(Point), UFlibExportNavData::FVector2FCustomVec(InExtern));
+			rSuccess = UE4RecastHelper::dtIsValidNavigationPoint(NavMeshData, Point, InExtern);
 		}
 	}
 
@@ -171,6 +174,23 @@ bool UFlibExportNavData::FindDetourPathByEngineNavMesh(const FVector& InStart, c
 
 	return FindDetourPathByNavMesh(RecastdtNavMesh, InStart, InEnd, OutPaths);
 	
+}
+
+
+bool UFlibExportNavData::GetRandomPointByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InOrigin, const FVector& InRedius, FVector& OutPoint)
+{
+	dtNavMeshQuery NavQuery;
+	dtQueryFilter QueryFilter;
+
+	NavQuery.init(InDtNavObject->GetNavData(), 1024);
+	bool Status = false;
+	UE4RecastHelper::FVector3 Result;
+	{
+		SCOPE_CYCLE_COUNTER(STAT_ExportNav);
+		Status = UE4RecastHelper::GetRandomPointInRadius(&NavQuery, &QueryFilter, InOrigin, InRedius, Result);
+	}
+	OutPoint = Result.UE4Vector();
+	return Status;
 }
 
 bool UFlibExportNavData::FindDetourPathByNavMesh(dtNavMesh* InNavMesh, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths)
@@ -242,7 +262,7 @@ bool UFlibExportNavData::IsValidNavigationPointInNavbin(const FString& InNavBinP
 		
 	if (NavMeshData)
 	{
-		rSuccess = UE4RecastHelper::dtIsValidNavigationPoint(NavMeshData, UFlibExportNavData::FVector2FCustomVec(Point), UFlibExportNavData::FVector2FCustomVec(InExtern));
+		rSuccess = UE4RecastHelper::dtIsValidNavigationPoint(NavMeshData, Point, InExtern);
 		dtFreeNavMesh(NavMeshData);
 	}
 	

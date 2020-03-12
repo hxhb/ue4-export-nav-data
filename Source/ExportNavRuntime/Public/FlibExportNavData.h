@@ -40,16 +40,11 @@ public:
 		static bool FindDetourPathByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
 	UFUNCTION(BlueprintCallable)
 		static bool FindDetourPathByEngineNavMesh(const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
+	UFUNCTION(BlueprintCallable)
+		static bool GetRandomPointByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InOrigin, const FVector& InRedius, FVector& OutPoint);
+		
 	static bool FindDetourPathByNavMesh(dtNavMesh* InNavMesh ,const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
 	
-	FORCEINLINE static FVector FCustomVec2FVector(const UE4RecastHelper::FVector3& InCustomVector)
-	{
-		return FVector{ InCustomVector.X,InCustomVector.Y,InCustomVector.Z };
-	}
-	FORCEINLINE static UE4RecastHelper::FVector3 FVector2FCustomVec(const FVector& InVector)
-	{
-		return UE4RecastHelper::FVector3{ InVector.X,InVector.Y,InVector.Z };
-	}
 
 	static FString ConvPath_Slash2BackSlash(const FString& InPath);
 

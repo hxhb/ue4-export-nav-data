@@ -56,6 +56,14 @@ namespace UE4RecastHelper
 		{
 			return FVector3{ fabsf(X),fabsf(Y),fabsf(Z) };
 		}
+#ifdef USE_DETOUR_BUILT_INTO_UE4
+		inline FVector3(FVector InUE4Vector) :X(InUE4Vector.X), Y(InUE4Vector.Y), Z(InUE4Vector.Z) {}
+
+		inline FVector UE4Vector()const
+		{
+			return FVector{ X,Y,Z };
+		}
+#endif
 	};
 
 	FVector3 Recast2UnrealPoint(const FVector3& Vector);
@@ -67,6 +75,8 @@ namespace UE4RecastHelper
 	bool dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const FVector3& InPoint, const FVector3& InExtent = FVector3{ 10.f,10.f,10.f });
 
 	int findStraightPath(dtNavMesh* InNavMeshData, dtNavMeshQuery* InNavmeshQuery, const FVector3& start, const FVector3& end, std::vector<FVector3>& paths);
+
+	static bool GetRandomPointInRadius(dtNavMeshQuery* InNavmeshQuery, dtQueryFilter* InQueryFilter,const FVector3& InOrigin,const FVector3& InRedius,FVector3& OutPoint);
 };
 
 

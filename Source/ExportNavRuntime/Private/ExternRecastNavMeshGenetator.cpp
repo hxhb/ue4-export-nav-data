@@ -61,14 +61,14 @@ void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& Fi
 						IndexBuffer.Add(CachedGeometry.Indices[i] + CoordBuffer.Num() / 3);
 					}
 
-#if !EXPORT_NAV_MESH_AS_METER
-					//// Export unit centimeters
-					for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i+=3)
+#if EXPORT_NAV_MESH_AS_METER
+					//// Export unit meters
+					for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i += 3)
 					{
 						FVector Corrd = FVector{
-							CachedGeometry.Verts[i]/100.f,
-							CachedGeometry.Verts[i+2]/100.f,
-							CachedGeometry.Verts[i+1]/100.f,
+							CachedGeometry.Verts[i] / 100.f,
+							CachedGeometry.Verts[i + 2] / 100.f,
+							CachedGeometry.Verts[i + 1] / 100.f,
 						};
 						// CoordBuffer.Add(CachedGeometry.Verts[i]);
 						CoordBuffer.Add(Corrd.X);
@@ -76,11 +76,11 @@ void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& Fi
 						CoordBuffer.Add(Corrd.Y);
 					}
 #else
-					// Export unit meters
-					 for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i++)
-					 {
-					 	CoordBuffer.Add(CachedGeometry.Verts[i]);
-					 }
+					// Export unit centimeters 
+					for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i++)
+					{
+						CoordBuffer.Add(CachedGeometry.Verts[i]);
+					}
 #endif
 				}
 				else

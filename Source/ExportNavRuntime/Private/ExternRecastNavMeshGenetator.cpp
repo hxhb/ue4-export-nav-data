@@ -16,7 +16,7 @@ FExternRecastGeometryCache::FExternRecastGeometryCache(const uint8* Memory)
 	Indices = (int32*)(Memory + sizeof(FExternRecastGeometryCache) + (sizeof(float) * Header.NumVerts * 3));
 }
 
-void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& FileName)
+void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& FileName, EExportMode InExportMode)
 {
 	const UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
 	const FNavigationOctree* NavOctree = NavSys ? NavSys->GetNavOctree() : NULL;
@@ -61,27 +61,36 @@ void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& Fi
 						IndexBuffer.Add(CachedGeometry.Indices[i] + CoordBuffer.Num() / 3);
 					}
 
-#if EXPORT_NAV_MESH_AS_METER
-					//// Export unit meters
-					for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i += 3)
+					switch (InExportMode)
 					{
-						FVector Corrd = FVector{
-							CachedGeometry.Verts[i] / 100.f,
-							CachedGeometry.Verts[i + 2] / 100.f,
-							CachedGeometry.Verts[i + 1] / 100.f,
+						case EExportMode::Metre:
+						{
+							//// Export unit metre
+							for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i += 3)
+							{
+								FVector Corrd = FVector{
+									CachedGeometry.Verts[i] / 100.f,
+									CachedGeometry.Verts[i + 2] / 100.f,
+									CachedGeometry.Verts[i + 1] / 100.f,
+								};
+								// CoordBuffer.Add(CachedGeometry.Verts[i]);
+								CoordBuffer.Add(Corrd.X);
+								CoordBuffer.Add(Corrd.Z);
+								CoordBuffer.Add(Corrd.Y);
+							}
+							break;
 						};
-						// CoordBuffer.Add(CachedGeometry.Verts[i]);
-						CoordBuffer.Add(Corrd.X);
-						CoordBuffer.Add(Corrd.Z);
-						CoordBuffer.Add(Corrd.Y);
+						case EExportMode::Centimeter:
+						{
+							// Export unit centimeters 
+							for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i++)
+							{
+								CoordBuffer.Add(CachedGeometry.Verts[i]);
+							}
+							break;
+						};
 					}
-#else
-					// Export unit centimeters 
-					for (int32 i = 0; i < CachedGeometry.Header.NumVerts * 3; i++)
-					{
-						CoordBuffer.Add(CachedGeometry.Verts[i]);
-					}
-#endif
+
 				}
 				else
 

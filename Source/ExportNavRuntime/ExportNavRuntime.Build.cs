@@ -59,8 +59,8 @@ public class ExportNavRuntime : ModuleRules
                 new string[]
                 {
                     "USE_DETOUR_BUILT_INTO_UE4",
-                    "EXPORT_NAV_MESH_AS_METER=0"
-
+                    "EXPORT_NAV_MESH_AS_M",
+                    "EXPORT_NAV_MESH_AS_CM",
                 }
             );
 	}

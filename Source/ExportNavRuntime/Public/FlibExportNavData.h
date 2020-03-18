@@ -1,6 +1,7 @@
 // Copyright 2019 Lipeng Zha, Inc. All Rights Reserved.
 
 #pragma once
+#include "ExternRecastNavMeshGenetator.h"
 
 #include "Detour/DetourNavMesh.h"
 #include "Detour/DetourNavMeshQuery.h"
@@ -21,10 +22,10 @@ class EXPORTNAVRUNTIME_API UFlibExportNavData : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 public:
 	// Editor only
-	UFUNCTION(Exec,BlueprintCallable,Category="ExportNav")
-		static bool ExportRecastNavMesh(const FString& SavePath);
+	// UFUNCTION(Exec,BlueprintCallable,Category="ExportNav")
+		static bool ExportRecastNavMesh(const FString& SavePath,EExportMode InExportMode);
 	// Editor and Runtime
-	UFUNCTION(Exec,BlueprintCallable,Category="ExportNav")
+	// UFUNCTION(Exec,BlueprintCallable,Category="ExportNav")
 		static bool ExportRecastNavData(const FString& InFilePath);
 
 	static dtNavMesh* GetdtNavMeshInsByWorld(UWorld* InWorld);

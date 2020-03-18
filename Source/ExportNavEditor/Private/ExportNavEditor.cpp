@@ -88,28 +88,31 @@ void FExportNavEditorModule::PluginButtonClicked()
 		if (!OutPath.IsEmpty() && FPaths::DirectoryExists(OutPath))
 		{
 			FString CurrentTime = FDateTime::Now().ToString();
-			FString NavMeshFile = FPaths::Combine(OutPath, MapName + TEXT("-NavMesh-") + CurrentTime+TEXT(".obj"));
-			DoExportNavMesh(NavMeshFile);
+
+			FText NavMeshMsg = LOCTEXT("SaveNavMeshMesh", "Successd to Export the NavMesh.");
+
+#if EXPORT_NAV_MESH_AS_CM
+			FString NavMeshFileCM = FPaths::Combine(OutPath, MapName + TEXT("-NavMesh-CM-") + CurrentTime+TEXT(".obj"));
+			DoExportNavMesh(NavMeshFileCM,EExportMode::Centimeter);
+			CreateSaveFileNotify(NavMeshMsg, NavMeshFileCM);
+#endif
+#if EXPORT_NAV_MESH_AS_M
+			FString NavMeshFileM = FPaths::Combine(OutPath, MapName + TEXT("-NavMesh-M-") + CurrentTime + TEXT(".obj"));
+			DoExportNavMesh(NavMeshFileM, EExportMode::Metre);
+			CreateSaveFileNotify(NavMeshMsg, NavMeshFileM);
+#endif
 			FString NavDataFile = FPaths::Combine(OutPath, MapName + TEXT("-NavData-") + CurrentTime+TEXT(".bin"));
 			DoExportNavData(NavDataFile);
 
-//#if PLATFORM_WINDOWS
-//			FString FinalCommdParas = TEXT("/e,/root,");
-//			FString OpenPath = UFlibExportNavData::ConvPath_Slash2BackSlash(OutPath);
-//			FinalCommdParas.Append(OpenPath);
-//			FPlatformProcess::CreateProc(TEXT("explorer "), *FinalCommdParas, true, false, false, NULL, NULL, NULL, NULL, NULL);
-//#endif
 			FText NavDataMsg = LOCTEXT("SaveNavMeshData", "Successd to Export the RecastNavigation data.");
 			CreateSaveFileNotify(NavDataMsg, NavDataFile);
-			FText NavMeshMsg = LOCTEXT("SaveNavMeshMesh", "Successd to Export the NavMesh.");
-			CreateSaveFileNotify(NavMeshMsg, NavMeshFile);
 		}
 	}
 }
 
-void FExportNavEditorModule::DoExportNavMesh(const FString& SaveToFile)
+void FExportNavEditorModule::DoExportNavMesh(const FString& SaveToFile,EExportMode InExportMode)
 {
-	UFlibExportNavData::ExportRecastNavMesh(SaveToFile);
+	UFlibExportNavData::ExportRecastNavMesh(SaveToFile,InExportMode);
 }
 
 void FExportNavEditorModule::NotFountAnyValidNavDataMsg()

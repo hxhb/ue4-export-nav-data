@@ -25,7 +25,8 @@ public class ExportNavEditor : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core"
+				"Core",
+                "ExportNavRuntime"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -46,7 +47,6 @@ public class ExportNavEditor : ModuleRules
 				"SlateCore",
 				"NavigationSystem",
 				"NavMesh",
-				"ExportNavRuntime"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

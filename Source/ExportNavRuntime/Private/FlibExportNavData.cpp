@@ -1,7 +1,7 @@
 // Copyright 2019 Lipeng Zha, Inc. All Rights Reserved.
 
 #include "FlibExportNavData.h"
-#include "ExternRecastNavMeshGenetator.h"
+
 // #include "Editor.h"
 #include "NavigationSystem.h"
 #include "NavigationData.h"
@@ -17,7 +17,7 @@
 DECLARE_STATS_GROUP(TEXT("ExportNav"), STATGROUP_ExportNav, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("ExportNav"), STAT_ExportNav, STATGROUP_ExportNav);
 
-bool UFlibExportNavData::ExportRecastNavMesh(const FString& SaveFile)
+bool UFlibExportNavData::ExportRecastNavMesh(const FString& SaveFile,EExportMode InExportMode)
 {
 #if WITH_EDITOR
 	
@@ -51,7 +51,7 @@ bool UFlibExportNavData::ExportRecastNavMesh(const FString& SaveFile)
 					const FString Name = NavData->GetName();
 					FinalSaveFile = FPaths::Combine(FPaths::ProjectSavedDir(), Name);
 				}
-				Generator->ExternExportNavigationData(FinalSaveFile);
+				Generator->ExternExportNavigationData(FinalSaveFile,InExportMode);
 				return true;
 			}
 		}

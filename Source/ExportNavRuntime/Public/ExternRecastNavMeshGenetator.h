@@ -33,12 +33,18 @@ struct FExternRecastGeometryCache
 	static bool IsValid(const uint8* Memory, int32 MemorySize);
 };
 
+UENUM(BlueprintType)
+enum EExportMode
+{
+	Metre,
+	Centimeter
+};
 
 class EXPORTNAVRUNTIME_API FExternExportNavMeshGenerator : public FRecastNavMeshGenerator
 {
 
 public:
-	void ExternExportNavigationData(const FString& FileName);
+	void ExternExportNavigationData(const FString& FileName,EExportMode InExportMode);
 
 	static FVector ChangeDirectionOfPoint(FVector Coord);
 	void GrowConvexHull(const float ExpandBy, const TArray<FVector>& Verts, TArray<FVector>& OutResult);

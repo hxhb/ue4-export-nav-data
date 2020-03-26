@@ -138,7 +138,7 @@ bool UFlibExportNavData::IsValidNavigationPointInNavObj(UdtNavMeshWrapper* InDtN
 	return rSuccess;
 }
 
-bool UFlibExportNavData::FindDetourPathByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths)
+bool UFlibExportNavData::FindDetourPathFromGameAxisByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths)
 {
 	using namespace UE4RecastHelper;
 
@@ -148,7 +148,23 @@ bool UFlibExportNavData::FindDetourPathByNavObject(class UdtNavMeshWrapper* InDt
 		dtNavMesh* NavMeshData = InDtNavObject->GetNavData();
 		if (NavMeshData)
 		{
-			bstatus = UFlibExportNavData::FindDetourPathByNavMesh(NavMeshData, InStart, InEnd, OutPaths);
+			bstatus = UFlibExportNavData::FindDetourPathByGameAxis(NavMeshData, InStart, InEnd, OutPaths);
+		}
+	}
+	return bstatus;
+}
+
+bool UFlibExportNavData::FindDetourPathFromRecastAxisByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths)
+{
+	using namespace UE4RecastHelper;
+
+	bool bstatus = false;
+	if (InDtNavObject && InDtNavObject->IsAvailableNavData())
+	{
+		dtNavMesh* NavMeshData = InDtNavObject->GetNavData();
+		if (NavMeshData)
+		{
+			bstatus = UFlibExportNavData::FindDetourPathByRecastAxis(NavMeshData, InStart, InEnd, OutPaths);
 		}
 	}
 	return bstatus;
@@ -172,7 +188,7 @@ bool UFlibExportNavData::FindDetourPathByEngineNavMesh(const FVector& InStart, c
 
 	dtNavMesh* RecastdtNavMesh = UFlibExportNavData::GetdtNavMeshInsByWorld(World);
 
-	return FindDetourPathByNavMesh(RecastdtNavMesh, InStart, InEnd, OutPaths);
+	return UFlibExportNavData::FindDetourPathByGameAxis(RecastdtNavMesh, InStart, InEnd, OutPaths);
 	
 }
 
@@ -192,16 +208,18 @@ bool UFlibExportNavData::GetRandomPointByNavObject(class UdtNavMeshWrapper* InDt
 	OutPoint = Result.UE4Vector();
 	return Status;
 }
+#include "Detour/DetourStatus.h"
 
-bool UFlibExportNavData::FindDetourPathByNavMesh(dtNavMesh* InNavMesh, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths)
+bool UFlibExportNavData::FindDetourPathByRecastAxis(dtNavMesh* InNavMesh, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths)
 {
+	FVector RcStart = InStart;
+	FVector RcEnd = InEnd;
+
 	dtNavMeshQuery NavQuery;
 	dtQueryFilter QueryFilter;
 
 	NavQuery.init(InNavMesh, 1024);
 
-	FVector RcStart = UFlibExportNavData::Unreal2RecastPoint(InStart);
-	FVector RcEnd = UFlibExportNavData::Unreal2RecastPoint(InEnd);
 	float Extern[3]{ 10.f,10.f,10.f };
 
 	float StartPoint[3]{ RcStart.X,RcStart.Y,RcStart.Z };
@@ -219,11 +237,23 @@ bool UFlibExportNavData::FindDetourPathByNavMesh(dtNavMesh* InNavMesh, const FVe
 	UE_LOG(LogTemp, Log, TEXT("Start Point FindNearestPoly narestpt is %s."), *FVector(StartPoint[0], StartPoint[1], StartPoint[2]).ToString());
 	UE_LOG(LogTemp, Log, TEXT("End Point FindNearestPoly narestpt is %s."), *FVector(EndPoint[0], EndPoint[1], EndPoint[2]).ToString());
 
+	if (!dtStatusSucceed(StartStatus) || !dtStatusSucceed(EndStatus))
+	{
+		UE_LOG(LogTemp,Log,TEXT("find Start or End nearest poly faild."))
+		return false;
+	}
+
 	dtQueryResult result;
 	float totalcost[1024 * 3];
 	dtStatus FindPathStatus = NavQuery.findPath(StartPolyRef, EndPolyRef, StartNarestPt, EndNarestPt, &QueryFilter, result, totalcost);
 
 	UE_LOG(LogTemp, Log, TEXT("findPath status is %u.,result size is %u."), FindPathStatus, result.size());
+	if (!dtStatusSucceed(FindPathStatus) && result.size() <= 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("find path faild."))
+			return false;
+	}
+
 	std::vector<dtPolyRef> path;
 
 	for (int index = 0; index < result.size(); ++index)
@@ -235,9 +265,9 @@ bool UFlibExportNavData::FindDetourPathByNavMesh(dtNavMesh* InNavMesh, const FVe
 		UE_LOG(LogTemp, Log, TEXT("Find Path index is %d pos is %s."), index, *UFlibExportNavData::Recast2UnrealPoint(FVector(currentpos[0], currentpos[1], currentpos[2])).ToString());
 		// OutPaths.Add(UFlibExportNavData::Recast2UnrealPoint(FVector(currentpos[0], currentpos[1], currentpos[2])));
 	}
+	
 	dtQueryResult findStraightPathResult;
 	NavQuery.findStraightPath(StartNarestPt, EndNarestPt, path.data(), path.size(), findStraightPathResult);
-
 
 	UE_LOG(LogTemp, Log, TEXT("findStraightPath size is %u."), findStraightPathResult.size());
 	for (int index = 0; index < findStraightPathResult.size(); ++index)
@@ -249,6 +279,13 @@ bool UFlibExportNavData::FindDetourPathByNavMesh(dtNavMesh* InNavMesh, const FVe
 		OutPaths.Add(UFlibExportNavData::Recast2UnrealPoint(FVector(currentpos[0], currentpos[1], currentpos[2])));
 	}
 	return true;
+}
+
+bool UFlibExportNavData::FindDetourPathByGameAxis(dtNavMesh* InNavMesh, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths)
+{
+	FVector RcStart = UFlibExportNavData::Unreal2RecastPoint(InStart);
+	FVector RcEnd = UFlibExportNavData::Unreal2RecastPoint(InEnd);
+	return UFlibExportNavData::FindDetourPathByRecastAxis(InNavMesh, RcStart, RcEnd, OutPaths);
 }
 
 bool UFlibExportNavData::IsValidNavigationPointInNavbin(const FString& InNavBinPath,const FVector& Point, const FVector InExtern)

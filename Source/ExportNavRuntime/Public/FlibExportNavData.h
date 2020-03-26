@@ -37,14 +37,18 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure,Category="ExportNav")
 		static bool IsValidNavigationPointInNavObj(class UdtNavMeshWrapper* InDtNavObject ,const FVector& Point, const FVector InExtern = FVector::ZeroVector);
 
-	UFUNCTION(BlueprintCallable)
-		static bool FindDetourPathByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable,meta=(AutoCreateRefTerm="InStart,InEnd"))
+		static bool FindDetourPathFromGameAxisByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
+	UFUNCTION(BlueprintCallable, meta = (AutoCreateRefTerm = "InStart,InEnd"))
+		static bool FindDetourPathFromRecastAxisByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
+	UFUNCTION(BlueprintCallable, meta = (AutoCreateRefTerm = "InStart,InEnd"))
 		static bool FindDetourPathByEngineNavMesh(const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, meta = (AutoCreateRefTerm = "InOrigin,InRedius"))
 		static bool GetRandomPointByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InOrigin, const FVector& InRedius, FVector& OutPoint);
 		
-	static bool FindDetourPathByNavMesh(dtNavMesh* InNavMesh ,const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
+	static bool FindDetourPathByRecastAxis(dtNavMesh* InNavMesh, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
+
+	static bool FindDetourPathByGameAxis(dtNavMesh* InNavMesh ,const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
 	
 
 	static FString ConvPath_Slash2BackSlash(const FString& InPath);

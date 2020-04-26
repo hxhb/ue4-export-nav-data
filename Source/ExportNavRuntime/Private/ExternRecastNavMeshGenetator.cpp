@@ -195,39 +195,81 @@ void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& Fi
 
 			const FRecastNavMeshGenerator* CurrentGen = static_cast<const FRecastNavMeshGenerator*>(NavData->GetGenerator());
 			check(CurrentGen);
-			AdditionalData += FString::Printf(TEXT("# AgentHeight\n"));
-			AdditionalData += FString::Printf(TEXT("rd_agh %5.5f\n"), CurrentGen->GetConfig().AgentHeight);
-			AdditionalData += FString::Printf(TEXT("# AgentRadius\n"));
-			AdditionalData += FString::Printf(TEXT("rd_agr %5.5f\n"), CurrentGen->GetConfig().AgentRadius);
 
 			AdditionalData += FString::Printf(TEXT("# Cell Size\n"));
 			AdditionalData += FString::Printf(TEXT("rd_cs %5.5f\n"), CurrentGen->GetConfig().cs);
 			AdditionalData += FString::Printf(TEXT("# Cell Height\n"));
 			AdditionalData += FString::Printf(TEXT("rd_ch %5.5f\n"), CurrentGen->GetConfig().ch);
-
-			AdditionalData += FString::Printf(TEXT("# Agent max climb\n"));
-			AdditionalData += FString::Printf(TEXT("rd_amc %d\n"), (int)CurrentGen->GetConfig().AgentMaxClimb);
 			AdditionalData += FString::Printf(TEXT("# Agent max slope\n"));
 			AdditionalData += FString::Printf(TEXT("rd_ams %5.5f\n"), CurrentGen->GetConfig().walkableSlopeAngle);
+			AdditionalData += FString::Printf(TEXT("# warkable height\n"));
+			AdditionalData += FString::Printf(TEXT("rd_wh %d\n"), CurrentGen->GetConfig().walkableHeight);
+			AdditionalData += FString::Printf(TEXT("# warkable Climb\n"));
+			AdditionalData += FString::Printf(TEXT("rd_wc %d\n"), CurrentGen->GetConfig().walkableClimb);
+			AdditionalData += FString::Printf(TEXT("# warkable radius\n"));
+			AdditionalData += FString::Printf(TEXT("rd_wr %d\n"), CurrentGen->GetConfig().walkableRadius);
+
+			AdditionalData += FString::Printf(TEXT("# AgentHeight\n"));
+			AdditionalData += FString::Printf(TEXT("rd_agh %5.5f\n"), CurrentGen->GetConfig().AgentHeight);
+			AdditionalData += FString::Printf(TEXT("# AgentRadius\n"));
+			AdditionalData += FString::Printf(TEXT("rd_agr %5.5f\n"), CurrentGen->GetConfig().AgentRadius);
+			AdditionalData += FString::Printf(TEXT("# Agent max climb\n"));
+			AdditionalData += FString::Printf(TEXT("rd_amc %5.5f\n"), (int)CurrentGen->GetConfig().AgentMaxClimb);
+			
+			AdditionalData += FString::Printf(TEXT("# border size\n"));
+			AdditionalData += FString::Printf(TEXT("rd_bs %d\n"), (int)CurrentGen->GetConfig().borderSize);
+			AdditionalData += FString::Printf(TEXT("# Max edge len\n"));
+			AdditionalData += FString::Printf(TEXT("rd_mel %d\n"), CurrentGen->GetConfig().maxEdgeLen);
+			AdditionalData += FString::Printf(TEXT("# maxSimplificationError\n"));
+			AdditionalData += FString::Printf(TEXT("rd_mse %5.5f\n"), CurrentGen->GetConfig().maxSimplificationError);
+
 
 			AdditionalData += FString::Printf(TEXT("# Region min size\n"));
 			AdditionalData += FString::Printf(TEXT("rd_rmis %d\n"), (uint32)FMath::Sqrt(CurrentGen->GetConfig().minRegionArea));
 			AdditionalData += FString::Printf(TEXT("# Region merge size\n"));
 			AdditionalData += FString::Printf(TEXT("rd_rmas %d\n"), (uint32)FMath::Sqrt(CurrentGen->GetConfig().mergeRegionArea));
 
-			AdditionalData += FString::Printf(TEXT("# Max edge len\n"));
-			AdditionalData += FString::Printf(TEXT("rd_mel %d\n"), CurrentGen->GetConfig().maxEdgeLen);
+			AdditionalData += FString::Printf(TEXT("# maxVertsPerPoly\n"));
+			AdditionalData += FString::Printf(TEXT("rd_mvpp %d\n"), CurrentGen->GetConfig().maxVertsPerPoly);
+			AdditionalData += FString::Printf(TEXT("# detailSampleDist\n"));
+			AdditionalData += FString::Printf(TEXT("rd_dsd %5.5f\n"), CurrentGen->GetConfig().detailSampleDist);
+			AdditionalData += FString::Printf(TEXT("# detailSampleMaxError\n"));
+			AdditionalData += FString::Printf(TEXT("rd_dsm %5.5f\n"), CurrentGen->GetConfig().detailSampleMaxError);
+			AdditionalData += FString::Printf(TEXT("# PolyMaxHeight\n"));
+			AdditionalData += FString::Printf(TEXT("rd_pmh %d\n"), CurrentGen->GetConfig().PolyMaxHeight);
+			AdditionalData += FString::Printf(TEXT("# minRegionArea\n"));
+			AdditionalData += FString::Printf(TEXT("rd_minra %d\n"), CurrentGen->GetConfig().minRegionArea);
+			AdditionalData += FString::Printf(TEXT("# mergeRegionArea\n"));
+			AdditionalData += FString::Printf(TEXT("rd_mergera %d\n"), CurrentGen->GetConfig().mergeRegionArea);
+
 
 			AdditionalData += FString::Printf(TEXT("# Perform Voxel Filtering\n"));
 			AdditionalData += FString::Printf(TEXT("rd_pvf %d\n"), CurrentGen->GetConfig().bPerformVoxelFiltering);
+			AdditionalData += FString::Printf(TEXT("# bMarkLowHeightAreas\n"));
+			AdditionalData += FString::Printf(TEXT("rd_mlha %d\n"), CurrentGen->GetConfig().bMarkLowHeightAreas);
+			AdditionalData += FString::Printf(TEXT("# bFilterLowSpanSequences\n"));
+			AdditionalData += FString::Printf(TEXT("rd_flss %d\n"), CurrentGen->GetConfig().bFilterLowSpanSequences);
+			AdditionalData += FString::Printf(TEXT("# bFilterLowSpanFromTileCache\n"));
+			AdditionalData += FString::Printf(TEXT("rd_flstc %d\n"), CurrentGen->GetConfig().bFilterLowSpanFromTileCache);
+
+			AdditionalData += FString::Printf(TEXT("# AgentIndex\n"));
+			AdditionalData += FString::Printf(TEXT("rd_ai %d\n"), CurrentGen->GetConfig().AgentIndex);
+			AdditionalData += FString::Printf(TEXT("# Tile size\n"));
+			AdditionalData += FString::Printf(TEXT("rd_ts %d\n"), CurrentGen->GetConfig().tileSize);
+
+			AdditionalData += FString::Printf(TEXT("# regionChunkSize\n"));
+			AdditionalData += FString::Printf(TEXT("rd_rcs %d\n"), CurrentGen->GetConfig().regionChunkSize);
+			AdditionalData += FString::Printf(TEXT("# TileCacheChunkSize\n"));
+			AdditionalData += FString::Printf(TEXT("rd_tccs %d\n"), CurrentGen->GetConfig().TileCacheChunkSize);
+			AdditionalData += FString::Printf(TEXT("# regionPartitioning\n"));
+			AdditionalData += FString::Printf(TEXT("rd_rp %d\n"), CurrentGen->GetConfig().regionPartitioning);
+			AdditionalData += FString::Printf(TEXT("# TileCachePartitionType\n"));
+			AdditionalData += FString::Printf(TEXT("rd_tcpt %d\n"), CurrentGen->GetConfig().TileCachePartitionType);
+
 			AdditionalData += FString::Printf(TEXT("# Generate Detailed Mesh\n"));
 			AdditionalData += FString::Printf(TEXT("rd_gdm %d\n"), CurrentGen->GetConfig().bGenerateDetailedMesh);
 			AdditionalData += FString::Printf(TEXT("# MaxPolysPerTile\n"));
 			AdditionalData += FString::Printf(TEXT("rd_mppt %d\n"), CurrentGen->GetConfig().MaxPolysPerTile);
-			AdditionalData += FString::Printf(TEXT("# maxVertsPerPoly\n"));
-			AdditionalData += FString::Printf(TEXT("rd_mvpp %d\n"), CurrentGen->GetConfig().maxVertsPerPoly);
-			AdditionalData += FString::Printf(TEXT("# Tile size\n"));
-			AdditionalData += FString::Printf(TEXT("rd_ts %d\n"), CurrentGen->GetConfig().tileSize);
 
 			AdditionalData += FString::Printf(TEXT("\n"));
 

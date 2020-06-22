@@ -341,3 +341,17 @@ FVector UFlibExportNavData::Unreal2RecastPoint(const FVector& Vector)
 {
 	return FVector(-Vector.X, Vector.Z, -Vector.Y);
 }
+
+float UFlibExportNavData::FindDistanceToWall(UObject* WorldContextObject,const FVector& StartLoc)
+{
+	float result=0.f;
+	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(WorldContextObject);
+	check(NavSys);
+	ANavigationData* MainNavDataIns = NavSys->GetDefaultNavDataInstance();
+	ARecastNavMesh* RecastNavMeshIns = Cast<ARecastNavMesh>(MainNavDataIns);
+	if (RecastNavMeshIns && UKismetSystemLibrary::IsValid(RecastNavMeshIns))
+	{
+		result = RecastNavMeshIns->FindDistanceToWall(StartLoc);
+	}
+	return result;
+}

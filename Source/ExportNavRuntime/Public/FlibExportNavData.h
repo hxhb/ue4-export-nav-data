@@ -57,4 +57,8 @@ public:
 	static FVector Recast2UnrealPoint(const FVector& Vector);
 	UFUNCTION(BlueprintCallable)
 	static FVector Unreal2RecastPoint(const FVector& Vector);
+
+
+	UFUNCTION(BlueprintCallable,meta=(WorldContext="WorldContextObject",CallableWithoutWorldContext))
+		static float FindDistanceToWall(UObject* WorldContextObject, const FVector& StartLoc);
 };

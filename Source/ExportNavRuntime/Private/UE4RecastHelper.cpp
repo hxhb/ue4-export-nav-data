@@ -1,8 +1,8 @@
 // Copyright 2019 Lipeng Zha, Inc. All Rights Reserved.
 
 #include "UE4RecastHelper.h"
-#include "DetourStatus.h"
-#include "DetourNavMeshQuery.h"
+#include "Detour/DetourStatus.h"
+#include "Detour/DetourNavMeshQuery.h"
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
@@ -113,7 +113,14 @@ int UE4RecastHelper::findStraightPath(dtNavMesh* InNavMeshData, dtNavMeshQuery* 
 #endif
 
 	dtQueryResult Result;
+
+#if ENGINE_MINOR_VERSION < 24
 	dtStatus FindPathStatus = NavQuery.findPath(StartPolyRef, EndPolyRef, (float*)(&StartClosestPoint), (float*)(&EndClosestPoint), &QueryFilter, Result, NULL);
+#else
+	const float CostLimit = FLT_MAX;
+	dtStatus FindPathStatus = NavQuery.findPath(StartPolyRef, EndPolyRef, (float*)(&StartClosestPoint), (float*)(&EndClosestPoint), CostLimit, &QueryFilter, Result, NULL);
+#endif
+
 #ifdef USE_DETOUR_BUILT_INTO_UE4
 	UE_LOG(LogTemp, Log, TEXT("FindDetourPath FindPath return status is %u."), FindPathStatus);
 

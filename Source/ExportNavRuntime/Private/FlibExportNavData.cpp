@@ -245,8 +245,14 @@ bool UFlibExportNavData::FindDetourPathByRecastAxis(dtNavMesh* InNavMesh, const 
 
 	dtQueryResult result;
 	float totalcost[1024 * 3];
-	dtStatus FindPathStatus = NavQuery.findPath(StartPolyRef, EndPolyRef, StartNarestPt, EndNarestPt, &QueryFilter, result, totalcost);
 
+#if	ENGINE_MINOR_VERSION < 24
+	dtStatus FindPathStatus = NavQuery.findPath(StartPolyRef, EndPolyRef, StartNarestPt, EndNarestPt, &QueryFilter, result, totalcost);
+#else
+	const float CostLimit = FLT_MAX;
+	dtStatus FindPathStatus = NavQuery.findPath(StartPolyRef, EndPolyRef, StartNarestPt, EndNarestPt, CostLimit, &QueryFilter, result, totalcost);
+#endif
+	
 	UE_LOG(LogTemp, Log, TEXT("findPath status is %u.,result size is %u."), FindPathStatus, result.size());
 	if (!dtStatusSucceed(FindPathStatus) && result.size() <= 0)
 	{

@@ -236,7 +236,9 @@ void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& Fi
 			AdditionalData += FString::Printf(TEXT("# detailSampleMaxError\n"));
 			AdditionalData += FString::Printf(TEXT("rd_dsm %5.5f\n"), CurrentGen->GetConfig().detailSampleMaxError);
 			AdditionalData += FString::Printf(TEXT("# PolyMaxHeight\n"));
+#if ENGINE_MINOR_VERSION < 24
 			AdditionalData += FString::Printf(TEXT("rd_pmh %d\n"), CurrentGen->GetConfig().PolyMaxHeight);
+#endif
 			AdditionalData += FString::Printf(TEXT("# minRegionArea\n"));
 			AdditionalData += FString::Printf(TEXT("rd_minra %d\n"), CurrentGen->GetConfig().minRegionArea);
 			AdditionalData += FString::Printf(TEXT("# mergeRegionArea\n"));

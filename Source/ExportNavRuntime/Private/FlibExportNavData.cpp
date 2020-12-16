@@ -13,6 +13,7 @@
 #include "Misc/Paths.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
+#include "Resources/Version.h"
 
 DECLARE_STATS_GROUP(TEXT("ExportNav"), STATGROUP_ExportNav, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("ExportNav"), STAT_ExportNav, STATGROUP_ExportNav);

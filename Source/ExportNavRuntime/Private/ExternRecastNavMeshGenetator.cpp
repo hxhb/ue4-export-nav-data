@@ -8,6 +8,7 @@
 #include "NavigationSystem.h"
 #include "HAL/FileManager.h"
 #include "HAL/FileManagerGeneric.h"
+#include "Resources/Version.h"
 
 FExternRecastGeometryCache::FExternRecastGeometryCache(const uint8* Memory)
 {

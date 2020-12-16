@@ -7,6 +7,10 @@
 #include <cstdio>
 #include <cstdlib>
 
+#ifdef USE_DETOUR_BUILT_INTO_UE4
+	#include "Resources/Version.h"
+#endif
+
 static const long RCN_NAVMESH_VERSION = 1;
 static const int INVALID_NAVMESH_POLYREF = 0;
 static const int MAX_POLYS = 256;

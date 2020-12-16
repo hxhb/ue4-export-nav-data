@@ -1,6 +1,7 @@
 // Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class ExportNavRuntime : ModuleRules
 {
@@ -10,6 +11,7 @@ public class ExportNavRuntime : ModuleRules
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
+				Path.Combine(EngineDirectory,"Source/Runtime/Launch")
 				// ... add public include paths required here ...
 			}
 			);

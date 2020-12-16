@@ -2,16 +2,14 @@
 
 #pragma once
 #include "ExternRecastNavMeshGenetator.h"
+#include "UE4RecastHelper.h"
 
 #include "Detour/DetourNavMesh.h"
 #include "Detour/DetourNavMeshQuery.h"
 #include "Misc/Paths.h"
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "UE4RecastHelper.h"
 #include "FLibExportNavData.generated.h"
-
-
 
 /**
  * 
@@ -38,17 +36,17 @@ public:
 		static bool IsValidNavigationPointInNavObj(class UdtNavMeshWrapper* InDtNavObject ,const FVector& Point, const FVector InExtern = FVector::ZeroVector);
 
 	UFUNCTION(BlueprintCallable,meta=(AutoCreateRefTerm="InStart,InEnd"))
-		static bool FindDetourPathFromGameAxisByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
+		static bool FindDetourPathFromGameAxisByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, const FVector& InExternSize, TArray<FVector>& OutPaths);
 	UFUNCTION(BlueprintCallable, meta = (AutoCreateRefTerm = "InStart,InEnd"))
-		static bool FindDetourPathFromRecastAxisByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
+		static bool FindDetourPathFromRecastAxisByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, const FVector& InExternSize, TArray<FVector>& OutPaths);
 	UFUNCTION(BlueprintCallable, meta = (AutoCreateRefTerm = "InStart,InEnd"))
-		static bool FindDetourPathByEngineNavMesh(const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
+		static bool FindDetourPathByEngineNavMesh(const FVector& InStart, const FVector& InEnd, const FVector& InExternSize, TArray<FVector>& OutPaths);
 	UFUNCTION(BlueprintCallable, meta = (AutoCreateRefTerm = "InOrigin,InRedius"))
 		static bool GetRandomPointByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InOrigin, const FVector& InRedius, FVector& OutPoint);
 		
-	static bool FindDetourPathByRecastAxis(dtNavMesh* InNavMesh, const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
+	static bool FindDetourPathByRecastAxis(dtNavMesh* InNavMesh, const FVector& InStart, const FVector& InEnd, const FVector& ExternSize, TArray<FVector>& OutPaths);
 
-	static bool FindDetourPathByGameAxis(dtNavMesh* InNavMesh ,const FVector& InStart, const FVector& InEnd, TArray<FVector>& OutPaths);
+	static bool FindDetourPathByGameAxis(dtNavMesh* InNavMesh, const FVector& InStart, const FVector& InEnd, const FVector& InExternSize, TArray<FVector>& OutPaths);
 	
 
 	static FString ConvPath_Slash2BackSlash(const FString& InPath);

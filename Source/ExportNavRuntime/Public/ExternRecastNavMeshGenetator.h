@@ -42,7 +42,6 @@ enum EExportMode
 
 class EXPORTNAVRUNTIME_API FExternExportNavMeshGenerator : public FRecastNavMeshGenerator
 {
-
 public:
 	void ExternExportNavigationData(const FString& FileName,EExportMode InExportMode);
 

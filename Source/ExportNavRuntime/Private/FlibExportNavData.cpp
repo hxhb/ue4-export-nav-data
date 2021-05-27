@@ -247,7 +247,7 @@ bool UFlibExportNavData::FindDetourPathByRecastAxis(dtNavMesh* InNavMesh, const 
 	dtQueryResult result;
 	float totalcost[1024 * 3];
 
-#if	ENGINE_MINOR_VERSION < 24
+#if	ENGINE_MAJOR_VERSION <=4 && ENGINE_MINOR_VERSION < 24
 	dtStatus FindPathStatus = NavQuery.findPath(StartPolyRef, EndPolyRef, StartNarestPt, EndNarestPt, &QueryFilter, result, totalcost);
 #else
 	const float CostLimit = FLT_MAX;

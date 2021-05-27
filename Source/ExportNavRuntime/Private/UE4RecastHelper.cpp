@@ -118,7 +118,7 @@ int UE4RecastHelper::findStraightPath(dtNavMesh* InNavMeshData, dtNavMeshQuery* 
 
 	dtQueryResult Result;
 
-#if ENGINE_MINOR_VERSION < 24
+#if ENGINE_MAJOR_VERSION <=4 && ENGINE_MINOR_VERSION < 24
 	dtStatus FindPathStatus = NavQuery.findPath(StartPolyRef, EndPolyRef, (float*)(&StartClosestPoint), (float*)(&EndClosestPoint), &QueryFilter, Result, NULL);
 #else
 	const float CostLimit = FLT_MAX;

@@ -6,6 +6,8 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
+#include <string>
+#include "HACK_PRIVATE_MEMBER_UTILS.hpp"
 
 #ifdef USE_DETOUR_BUILT_INTO_UE4
 	#include "Resources/Version.h"
@@ -285,6 +287,52 @@ dtNavMesh* UE4RecastHelper::DeSerializedtNavMesh(const char* path)
 	std::fclose(fp);
 
 	return mesh;
+}
+
+DECL_HACK_PRIVATE_CONST_FUNCTION(dtNavMesh,getTile,const dtMeshTile*,int);
+
+dtNavMesh* UE4RecastHelper::DeSerializeMultidtNavMesh(std::vector<std::string> bins)
+{
+	dtNavMesh* NavMesh = nullptr;
+
+	auto dtNavMesh_GetTile=GET_PRIVATE_MEMBER_FUNCTION(dtNavMesh, getTile);
+	
+	for(const auto& bin:bins)
+	{
+		dtNavMesh* CurrNavMesh = UE4RecastHelper::DeSerializedtNavMesh(bin.c_str());
+		if(!NavMesh && CurrNavMesh)
+		{
+			NavMesh = CurrNavMesh;
+		}
+		for(int tileIndex = 0;tileIndex <= CurrNavMesh->getMaxTiles();++tileIndex)
+		{
+			const dtMeshTile* CurrentTile = CALL_MEMBER_FUNCTION(CurrNavMesh,dtNavMesh_GetTile,tileIndex); //MainRecastNavMesh->getTile(tileIndex);
+			dtTileRef TileRef = CurrNavMesh->getTileRef(CurrentTile);
+			int32 TileDataSize = CurrentTile->dataSize;
+			unsigned char* TileData = UE4RecastHelper::DuplicateRecastRawData(CurrentTile->data,TileDataSize);
+			dtTileRef* AddtedTile = NULL;
+			dtStatus AddStatus =  NavMesh->addTile(TileData,TileDataSize,CurrentTile->flags,TileRef,AddtedTile);
+
+			if (!dtStatusSucceed(AddStatus) && !AddtedTile)
+			{
+				printf("Add %s tile index(%d) faild!",bin.c_str(),tileIndex);
+				return false;
+			}
+		}
+	}
+	return NavMesh;
+}
+
+
+uint8* UE4RecastHelper::DuplicateRecastRawData(uint8* Src, int32 SrcSize)
+{
+#if WITH_RECAST	
+	uint8* DupData = (uint8*)dtAlloc(SrcSize, DT_ALLOC_PERM);
+#else
+	uint8* DupData = (uint8*)FMemory::Malloc(SrcSize);
+#endif
+	FMemory::Memcpy(DupData, Src, SrcSize);
+	return DupData;
 }
 
 namespace UE4RecastHelper

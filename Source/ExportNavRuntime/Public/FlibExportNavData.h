@@ -28,6 +28,8 @@ public:
 
 	static dtNavMesh* GetdtNavMeshInsByWorld(UWorld* InWorld);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure,Category="ExportNav")
+	static ARecastNavMesh* GetMainRecastNavMesh(UWorld* World);
 	UFUNCTION(BlueprintCallable, BlueprintPure,Category="ExportNav", meta = (WorldContext = "WorldContextObject"))
 		static bool IsValidNavigvationPointInWorld(UObject* WorldContextObject, const FVector& Point, const FVector InExtern = FVector::ZeroVector);
 	UFUNCTION(BlueprintCallable, BlueprintPure,Category="ExportNav")

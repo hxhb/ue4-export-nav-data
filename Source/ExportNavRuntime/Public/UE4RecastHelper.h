@@ -8,6 +8,7 @@
 #include "Detour/DetourNavMeshQuery.h"
 #include <math.h>
 #include <inttypes.h>
+#include <string>
 #include <vector>
 
 namespace UE4RecastHelper
@@ -71,10 +72,12 @@ namespace UE4RecastHelper
 
 	void SerializedtNavMesh(const char* path, const dtNavMesh* mesh);
 	dtNavMesh* DeSerializedtNavMesh(const char* path);
-
-	static int findStraightPath(dtNavMesh* InNavMeshData, dtNavMeshQuery* InNavmeshQuery, const FVector3& start, const FVector3& end, std::vector<FVector3>& paths);
-	static bool dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const FVector3& InPoint, const FVector3& InExtent = FVector3{ 10.f,10.f,10.f });
-	static bool GetRandomPointInRadius(dtNavMeshQuery* InNavmeshQuery, dtQueryFilter* InQueryFilter,const FVector3& InOrigin,const FVector3& InRedius,FVector3& OutPoint);
+	dtNavMesh* DeSerializeMultidtNavMesh(std::vector<std::string> bins);
+	uint8* DuplicateRecastRawData(uint8* Src, int32 SrcSize);
+	
+	int findStraightPath(dtNavMesh* InNavMeshData, dtNavMeshQuery* InNavmeshQuery, const FVector3& start, const FVector3& end, std::vector<FVector3>& paths);
+	bool dtIsValidNavigationPoint(dtNavMesh* InNavMeshData, const FVector3& InPoint, const FVector3& InExtent = FVector3{ 10.f,10.f,10.f });
+	bool GetRandomPointInRadius(dtNavMeshQuery* InNavmeshQuery, dtQueryFilter* InQueryFilter,const FVector3& InOrigin,const FVector3& InRedius,FVector3& OutPoint);
 };
 
 

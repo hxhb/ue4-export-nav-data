@@ -18,7 +18,10 @@ class EXPORTNAVRUNTIME_API UdtNavMeshWrapper : public UObject
 	virtual ~UdtNavMeshWrapper()override;
 
 	UFUNCTION(BlueprintCallable,Category="ExportNav")
-	UdtNavMeshWrapper* LoadNavData(const FString& NavDataBinPath=TEXT(""));
+	UdtNavMeshWrapper* LoadNavData(const TArray<FString>& NavDataBinPaths);
+	UFUNCTION(BlueprintCallable,Category="ExportNav")
+	void ReleaseNavData();
+	
 	UFUNCTION(BlueprintCallable,Category="ExportNav")
 		bool IsAvailableNavData()const;
 

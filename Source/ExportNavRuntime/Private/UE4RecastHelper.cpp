@@ -289,7 +289,7 @@ dtNavMesh* UE4RecastHelper::DeSerializedtNavMesh(const char* path)
 	return mesh;
 }
 
-DECL_HACK_PRIVATE_CONST_FUNCTION(dtNavMesh,getTile,const dtMeshTile*,int);
+// DECL_HACK_PRIVATE_CONST_FUNCTION(dtNavMesh,getTile,const dtMeshTile*,int);
 
 dtNavMesh* UE4RecastHelper::DeSerializeMultidtNavMesh(std::vector<std::string> bins)
 {
@@ -303,33 +303,46 @@ dtNavMesh* UE4RecastHelper::DeSerializeMultidtNavMesh(std::vector<std::string> b
 		if(!NavMesh && CurrNavMesh)
 		{
 			NavMesh = CurrNavMesh;
+			continue;
 		}
-		for(int tileIndex = 0;tileIndex <= CurrNavMesh->getMaxTiles();++tileIndex)
+		GET_REF_PRIVATE_DATA_MEMBER(NavMesh_m_maxTiles, NavMesh, dtNavMesh, m_maxTiles);
+		GET_REF_PRIVATE_DATA_MEMBER(NavMesh_m_params, NavMesh, dtNavMesh, m_params);
+		
+		// NavMesh_m_params.maxPolys += CurrNavMesh->getParams()->maxPolys;
+
+		for(int tileIndex = 0;tileIndex < CurrNavMesh->getMaxTiles();++tileIndex)
 		{
 			const dtMeshTile* CurrentTile = CALL_MEMBER_FUNCTION(CurrNavMesh,dtNavMesh_GetTile,tileIndex); //MainRecastNavMesh->getTile(tileIndex);
 			dtTileRef TileRef = CurrNavMesh->getTileRef(CurrentTile);
-			int32 TileDataSize = CurrentTile->dataSize;
-			unsigned char* TileData = UE4RecastHelper::DuplicateRecastRawData(CurrentTile->data,TileDataSize);
-			dtTileRef* AddtedTile = NULL;
-			dtStatus AddStatus =  NavMesh->addTile(TileData,TileDataSize,CurrentTile->flags,TileRef,AddtedTile);
-
-			if (!dtStatusSucceed(AddStatus) && !AddtedTile)
+			size_t TileDataSize = CurrentTile->dataSize;
+			if(CurrentTile->data && TileDataSize > 0)
 			{
-				printf("Add %s tile index(%d) faild!",bin.c_str(),tileIndex);
-				return false;
+				char* TileData = UE4RecastHelper::DuplicateRecastRawData((char*)CurrentTile->data,TileDataSize);
+				dtTileRef AddtedTile;
+				unsigned int founedIndex = NavMesh->getTileIndex(CurrentTile);
+
+				dtStatus AddStatus = NavMesh->addTile((unsigned char*)TileData, TileDataSize, CurrentTile->flags, TileRef, &AddtedTile);
+				if (dtStatusSucceed(AddStatus))
+				{
+					NavMesh_m_maxTiles++;
+					NavMesh_m_params.maxTiles++;
+				}
+				else
+				{
+					// printf("Add %s tile index(%d) faild!", bin.c_str(), tileIndex);
+				}
 			}
 		}
 	}
 	return NavMesh;
 }
 
-
-uint8* UE4RecastHelper::DuplicateRecastRawData(uint8* Src, int32 SrcSize)
+char* UE4RecastHelper::DuplicateRecastRawData(char* Src, int32 SrcSize)
 {
 #if WITH_RECAST	
-	uint8* DupData = (uint8*)dtAlloc(SrcSize, DT_ALLOC_PERM);
+	char* DupData = (char*)dtAlloc(SrcSize, DT_ALLOC_PERM);
 #else
-	uint8* DupData = (uint8*)FMemory::Malloc(SrcSize);
+	char* DupData = (char*)FMemory::Malloc(SrcSize);
 #endif
 	FMemory::Memcpy(DupData, Src, SrcSize);
 	return DupData;

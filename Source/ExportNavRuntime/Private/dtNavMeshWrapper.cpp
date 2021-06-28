@@ -14,31 +14,39 @@ UdtNavMeshWrapper::UdtNavMeshWrapper(const FObjectInitializer& ObjectInitializer
 
 UdtNavMeshWrapper::~UdtNavMeshWrapper()
 {
-	UE_LOG(LogTemp, Warning, TEXT("UdtNavMeshWrapper::~UdtNavMeshWrapper()"));
-
-	if (NavmeshIns)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("UdtNavMeshWrapper::~UdtNavMeshWrapper() free dtNavMesh"));
-		dtFreeNavMesh(NavmeshIns);
-	}
+	// UE_LOG(LogTemp, Warning, TEXT("UdtNavMeshWrapper::~UdtNavMeshWrapper()"));
+	//
+	// if (NavmeshIns)
+	// {
+	// 	UE_LOG(LogTemp, Warning, TEXT("UdtNavMeshWrapper::~UdtNavMeshWrapper() free dtNavMesh"));
+	// 	dtFreeNavMesh(NavmeshIns);
+	// }
 }
 
-UdtNavMeshWrapper* UdtNavMeshWrapper::LoadNavData(const FString& NavDataBinPath)
+UdtNavMeshWrapper* UdtNavMeshWrapper::LoadNavData(const TArray<FString>& NavDataBinPaths)
 {
-	if (!NavDataBinPath.IsEmpty()&& FPaths::FileExists(NavDataBinPath))
+	std::vector<std::string> binpaths;
+	for(const auto&NavDataPath:NavDataBinPaths)
 	{
-		if (NavmeshIns)
+		if (!NavDataPath.IsEmpty()&& FPaths::FileExists(NavDataPath))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("UdtNavMeshWrapper::LoadNavData Free old NavData"));
-			dtFreeNavMesh(NavmeshIns);
-			NavmeshIns = NULL;
+			binpaths.push_back(TCHAR_TO_ANSI(*NavDataPath));
 		}
-
-		UE_LOG(LogTemp, Warning, TEXT("UdtNavMeshWrapper::LoadNavData DeSerializedtNavMesh"));
-		NavmeshIns = UE4RecastHelper::DeSerializedtNavMesh(TCHAR_TO_ANSI(*NavDataBinPath));
 	}
-
+	ReleaseNavData();
+	UE_LOG(LogTemp, Warning, TEXT("UdtNavMeshWrapper::LoadNavData DeSerializedtNavMesh"));
+	NavmeshIns = UE4RecastHelper::DeSerializeMultidtNavMesh(binpaths);
 	return this;
+}
+
+void UdtNavMeshWrapper::ReleaseNavData()
+{
+	if(IsAvailableNavData())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UdtNavMeshWrapper::LoadNavData Free old NavData"));
+        	dtFreeNavMesh(NavmeshIns);
+        	NavmeshIns = NULL;
+	}
 }
 
 bool UdtNavMeshWrapper::IsAvailableNavData() const

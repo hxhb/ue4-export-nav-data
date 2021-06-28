@@ -3,13 +3,12 @@
 #include "FlibExportNavData.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "HACK_PRIVATE_MEMBER_UTILS.hpp"
+#include "ToolContextInterfaces.h"
 #include "Detour/DetourNavMesh.h"
 
 DEFINE_LOG_CATEGORY(LogExportNavMesh);
 
-DECL_HACK_PRIVATE_CONST_FUNCTION(dtNavMesh,getTile,const dtMeshTile*,int);
-
-bool UFlibExportNevChunk::ExportNavArea(UWorld* World, FBox Area,const FString& InFilePath)
+bool UFlibExportNevChunk::ExportNavAreaByRef(UWorld* World, FBox Area,const FString& InFilePath)
 {
 	if(!World)
 	{
@@ -26,53 +25,53 @@ bool UFlibExportNevChunk::ExportNavArea(UWorld* World, FBox Area,const FString& 
 		if (!World) return false;
 	}
 	ARecastNavMesh* RecastNavMesh = UFlibExportNavData::GetMainRecastNavMesh(World);
-
 	dtNavMesh* MainRecastNavMesh = UFlibExportNavData::GetdtNavMeshInsByWorld(World);
+
+	TArray<dtTileRef> TileIndexs;
+	UFlibExportNevChunk::GetNavMeshTilesRefInArea(MainRecastNavMesh,TArray<FBox>{Area},TileIndexs,World);
+
 	dtNavMesh* NavMesh = dtAllocNavMesh();
 	dtNavMeshParams TiledMeshParameters;
 	FMemory::Memzero(TiledMeshParameters);
 	TiledMeshParameters = *MainRecastNavMesh->getParams();
+	// TiledMeshParameters.maxTiles = TileIndexs.Num();
+
 	const dtStatus status = NavMesh->init(&TiledMeshParameters);
 	
-	UE4RecastHelper::NavMeshSetHeader header;
-	{
-		// Store header.
-		header.magic = UE4RecastHelper::NAVMESHSET_MAGIC;
-		header.version = UE4RecastHelper::NAVMESHSET_VERSION;
-		header.numTiles = 0;
-		std::memcpy(&header.params, MainRecastNavMesh->getParams(), sizeof(dtNavMeshParams));
-	}
-
-	TArray<int32> TileIndexs;
-	UFlibExportNevChunk::GetNavMeshTilesIn(MainRecastNavMesh,TArray<FBox>{Area},TileIndexs);
-	header.numTiles = TileIndexs.Num();
-
 	auto dtNavMesh_GetTile=GET_PRIVATE_MEMBER_FUNCTION(dtNavMesh, getTile);
 	
 	for(int32 tileIndex =0;tileIndex < TileIndexs.Num();++tileIndex)
 	{
-		const dtMeshTile* CurrentTile = CALL_MEMBER_FUNCTION(MainRecastNavMesh,dtNavMesh_GetTile,tileIndex); //MainRecastNavMesh->getTile(tileIndex);
-		dtTileRef TileRef = MainRecastNavMesh->getTileRef(CurrentTile);
+		const dtMeshTile* CurrentTile = MainRecastNavMesh->getTileByRef(TileIndexs[tileIndex]); //MainRecastNavMesh->getTile(tileIndex);
+		dtTileRef TileRef = TileIndexs[tileIndex];
 		int32 TileDataSize = CurrentTile->dataSize;
-		unsigned char* TileData = UE4RecastHelper::DuplicateRecastRawData(CurrentTile->data,TileDataSize);
+		char* TileData = UE4RecastHelper::DuplicateRecastRawData((char*)CurrentTile->data,TileDataSize);
 		if(TileData)
 		{
-			dtTileRef* AddtedTile = NULL;
-			dtStatus AddStatus =  NavMesh->addTile(TileData,TileDataSize,CurrentTile->flags,TileRef,AddtedTile);
+			dtTileRef AddtedTile;
+			dtStatus AddStatus =  NavMesh->addTile((unsigned char*)TileData,TileDataSize,CurrentTile->flags,TileRef,&AddtedTile);
 
-			if (!dtStatusSucceed(AddStatus) && !AddtedTile)
+			if (!dtStatusSucceed(AddStatus))
 			{
 				UE_LOG(LogExportNavMesh,Error,TEXT("Add tile index(%d) faild!"),tileIndex);
-				return false;
+				// return false;
+			}
+			else
+			{
+				FBox TileBounds = Recast2UnrealBox(CurrentTile->header->bmin, CurrentTile->header->bmax);
+				if(World)
+				{
+					UKismetSystemLibrary::DrawDebugBox(World,TileBounds.GetCenter(),TileBounds.GetExtent(),FLinearColor::Red,FRotator::ZeroRotator,10.0f);
+				}
 			}
 		}
 	}
 	UE4RecastHelper::SerializedtNavMesh(TCHAR_TO_ANSI(*InFilePath), NavMesh);
+	dtFreeNavMesh(NavMesh);
 	return true;
 }
 
-
-void UFlibExportNevChunk::GetNavMeshTilesIn(dtNavMesh* DetourNavMesh,const TArray<FBox>& InclusionBounds, TArray<int32>& Indices)
+void UFlibExportNevChunk::GetNavMeshTilesRefInArea(dtNavMesh* DetourNavMesh,const TArray<FBox>& InclusionBounds, TArray<dtTileRef>& Indices,UWorld* World)
 {
 	if (DetourNavMesh)
 	{
@@ -122,16 +121,90 @@ void UFlibExportNevChunk::GetNavMeshTilesIn(dtNavMesh* DetourNavMesh,const TArra
 						FBox TileBounds = Recast2UnrealBox(MeshTile->header->bmin, MeshTile->header->bmax);
 						for (const FBox& RequestedBounds : InclusionBounds)
 						{
-							if (TileBounds.Intersect(RequestedBounds))
-							// if (RequestedBounds.IsInside(TileBounds) || TileBounds.Intersect(RequestedBounds))
+							// if (TileBounds.Intersect(RequestedBounds))
+							if (RequestedBounds.IsInside(TileBounds) || TileBounds.Intersect(RequestedBounds))
 							{
-								int32 TileIndex = (int32)DetourNavMesh->decodePolyIdTile(TileRef);
-								Indices.Add(TileIndex);
+								// if(World)
+								// {
+								// 	UKismetSystemLibrary::DrawDebugBox(World,TileBounds.GetCenter(),TileBounds.GetExtent(),FLinearColor::Green,FRotator::ZeroRotator,10.0f);
+								// }
+								// int32 TileIndex = (int32)DetourNavMesh->decodePolyIdTile(TileRef);
+								Indices.Add(TileRef);
 								break;
+							}
+							else
+							{
+								continue;
 							}
 						}
 					}
 				}
+			}
+		}
+	}
+}
+
+FBox UFlibExportNevChunk::GetNavMeshTileBounds(dtNavMesh* DetourNavMesh,int32 TileIndex)
+{
+	FBox Bbox(ForceInit);
+
+	if (DetourNavMesh && TileIndex >= 0 && TileIndex < DetourNavMesh->getMaxTiles())
+	{
+		// workaround for privacy issue in the recast API
+		dtNavMesh const* const ConstRecastNavMesh = DetourNavMesh;
+
+		dtMeshTile const* const Tile = ConstRecastNavMesh->getTile(TileIndex);
+		if (Tile)
+		{
+			dtMeshHeader const* const Header = Tile->header;
+			if (Header)
+			{
+				Bbox = Recast2UnrealBox(Header->bmin, Header->bmax);
+			}
+		}
+	}
+	return Bbox;
+}
+
+bool UFlibExportNevChunk::GetNavMeshTileXY(dtNavMesh* DetourNavMesh,const FVector& Point, int32& OutX, int32& OutY)
+{
+	if (DetourNavMesh)
+	{
+		// workaround for privacy issue in the recast API
+		dtNavMesh const* const ConstRecastNavMesh = DetourNavMesh;
+
+		const FVector RecastPt = Unreal2RecastPoint(Point);
+		int32 TileX = 0;
+		int32 TileY = 0;
+
+		ConstRecastNavMesh->calcTileLoc(&RecastPt.X, &TileX, &TileY);
+		OutX = TileX;
+		OutY = TileY;
+		return true;
+	}
+
+	return false;
+}
+
+void UFlibExportNevChunk::GetNavMeshTilesAt(dtNavMesh* DetourNavMesh,int32 TileX, int32 TileY, TArray<int32>& Indices)
+{
+	if (DetourNavMesh)
+	{
+		// workaround for privacy issue in the recast API
+		dtNavMesh const* const ConstRecastNavMesh = DetourNavMesh;
+
+		const int32 MaxTiles = ConstRecastNavMesh->getTileCountAt(TileX, TileY);
+		TArray<const dtMeshTile*> Tiles;
+		Tiles.AddZeroed(MaxTiles);
+
+		const int32 NumTiles = ConstRecastNavMesh->getTilesAt(TileX, TileY, Tiles.GetData(), MaxTiles);
+		for (int32 i = 0; i < NumTiles; i++)
+		{
+			dtTileRef TileRef = ConstRecastNavMesh->getTileRef(Tiles[i]);
+			if (TileRef)
+			{
+				const int32 TileIndex = (int32)ConstRecastNavMesh->decodePolyIdTile(TileRef);
+				Indices.Add(TileIndex);
 			}
 		}
 	}

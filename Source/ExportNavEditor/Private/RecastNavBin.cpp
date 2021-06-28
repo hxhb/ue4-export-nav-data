@@ -30,7 +30,7 @@ void ARecastNavBin::ImportNavBin()
 {
 	if(UKismetSystemLibrary::IsValid(dtNavMesh) && FPaths::FileExists(dtNavMeshBin.FilePath))
 	{
-		dtNavMesh->LoadNavData(dtNavMeshBin.FilePath);
+		dtNavMesh->LoadNavData(TArray<FString>{dtNavMeshBin.FilePath});
 	}
 }
 

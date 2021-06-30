@@ -34,9 +34,11 @@ class EXPORTNAVRUNTIME_API UFlibExportNevChunk : public UBlueprintFunctionLibrar
 public:
 	// Editor only
 	UFUNCTION(BlueprintCallable)
-	static bool ExportNavAreaByRef(UWorld* World, FBox Area,const FString& InFilePath);
+	static bool ExportNavAreaByRef(UWorld* World, TArray<FBox> Areas,const FString& InFilePath);
 	static FBox GetNavMeshTileBounds(dtNavMesh* DetourNavMesh,int32 TileIndex);
 	static bool GetNavMeshTileXY(dtNavMesh* DetourNavMesh,const FVector& Point, int32& OutX, int32& OutY);
 	static void GetNavMeshTilesAt(dtNavMesh* DetourNavMesh,int32 TileX, int32 TileY, TArray<int32>& Indices);
 	static void GetNavMeshTilesRefInArea(dtNavMesh* DetourNavMesh,const TArray<FBox>& InclusionBounds, TArray<dtTileRef>& Indices,UWorld* World=NULL);
+
+	static UWorld* GetGWorld();
 };

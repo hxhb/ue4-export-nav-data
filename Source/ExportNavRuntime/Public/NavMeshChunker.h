@@ -34,9 +34,11 @@ public:
 	TArray<FString> GetNavMeshFiles()const;
 
 	UFUNCTION(BlueprintCallable,CallInEditor,Category = "Nav")
-	virtual void ExportNav(FBox Area);
+	virtual void ExportNav(const TArray<FBox>& Areas);
 	UFUNCTION(BlueprintCallable,CallInEditor,Category = "Nav")
 	virtual void FindPathByEngineNav();
 	UFUNCTION(BlueprintCallable,CallInEditor,Category = "Nav")
 	virtual void FindPathByNavFiles();
+	UFUNCTION(BlueprintCallable,CallInEditor,Category = "Nav")
+	virtual void DrawNavMeshsArea();
 };

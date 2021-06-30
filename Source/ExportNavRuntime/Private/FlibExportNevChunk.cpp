@@ -8,27 +8,17 @@
 
 DEFINE_LOG_CATEGORY(LogExportNavMesh);
 
-bool UFlibExportNevChunk::ExportNavAreaByRef(UWorld* World, FBox Area,const FString& InFilePath)
+bool UFlibExportNevChunk::ExportNavAreaByRef(UWorld* World, TArray<FBox> Areas,const FString& InFilePath)
 {
 	if(!World)
 	{
-		auto WorldList = GEngine->GetWorldContexts();
-		for (int32 i = 0; i < WorldList.Num(); ++i)
-		{
-			UWorld* local_World = WorldList[i].World();
-			if (local_World && UKismetSystemLibrary::IsValid(local_World))
-			{
-				World = local_World;
-				break;
-			}
-		}
-		if (!World) return false;
+		World = UFlibExportNevChunk::GetGWorld();
 	}
 	ARecastNavMesh* RecastNavMesh = UFlibExportNavData::GetMainRecastNavMesh(World);
 	dtNavMesh* MainRecastNavMesh = UFlibExportNavData::GetdtNavMeshInsByWorld(World);
 
 	TArray<dtTileRef> TileIndexs;
-	UFlibExportNevChunk::GetNavMeshTilesRefInArea(MainRecastNavMesh,TArray<FBox>{Area},TileIndexs,World);
+	UFlibExportNevChunk::GetNavMeshTilesRefInArea(MainRecastNavMesh,Areas,TileIndexs,World);
 
 	dtNavMesh* NavMesh = dtAllocNavMesh();
 	dtNavMeshParams TiledMeshParameters;
@@ -61,7 +51,7 @@ bool UFlibExportNevChunk::ExportNavAreaByRef(UWorld* World, FBox Area,const FStr
 				FBox TileBounds = Recast2UnrealBox(CurrentTile->header->bmin, CurrentTile->header->bmax);
 				if(World)
 				{
-					UKismetSystemLibrary::DrawDebugBox(World,TileBounds.GetCenter(),TileBounds.GetExtent(),FLinearColor::Red,FRotator::ZeroRotator,10.0f);
+					UKismetSystemLibrary::DrawDebugBox(World,TileBounds.GetCenter(),TileBounds.GetExtent(),FLinearColor::Red,FRotator::ZeroRotator,5.0f);
 				}
 			}
 		}
@@ -142,6 +132,22 @@ void UFlibExportNevChunk::GetNavMeshTilesRefInArea(dtNavMesh* DetourNavMesh,cons
 			}
 		}
 	}
+}
+
+UWorld* UFlibExportNevChunk::GetGWorld()
+{
+	UWorld* World = nullptr;
+	auto WorldList = GEngine->GetWorldContexts();
+	for (int32 i = 0; i < WorldList.Num(); ++i)
+	{
+		UWorld* local_World = WorldList[i].World();
+		if (local_World && UKismetSystemLibrary::IsValid(local_World))
+		{
+			World = local_World;
+			break;
+		}
+	}
+	return World;
 }
 
 FBox UFlibExportNevChunk::GetNavMeshTileBounds(dtNavMesh* DetourNavMesh,int32 TileIndex)

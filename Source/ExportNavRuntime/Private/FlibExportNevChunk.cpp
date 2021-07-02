@@ -24,7 +24,13 @@ bool UFlibExportNevChunk::ExportNavAreaByRef(UWorld* World, TArray<FBox> Areas,c
 	dtNavMeshParams TiledMeshParameters;
 	FMemory::Memzero(TiledMeshParameters);
 	TiledMeshParameters = *MainRecastNavMesh->getParams();
-	// TiledMeshParameters.maxTiles = TileIndexs.Num();
+
+	int32 MaxTiles=0;
+	int32 MaxPolys=0;
+	CalcNavMeshProperties(Areas,MaxTiles,MaxPolys);
+	
+	TiledMeshParameters.maxTiles = MaxTiles;
+	TiledMeshParameters.maxPolys = MaxPolys;
 
 	const dtStatus status = NavMesh->init(&TiledMeshParameters);
 	
@@ -214,4 +220,68 @@ void UFlibExportNevChunk::GetNavMeshTilesAt(dtNavMesh* DetourNavMesh,int32 TileX
 			}
 		}
 	}
+}
+
+void UFlibExportNevChunk::CalcPolyRefBits(ARecastNavMesh* NavMeshOwner, int32& MaxTileBits, int32& MaxPolyBits)
+{
+	static const int32 TotalBits = (sizeof(dtPolyRef) * 8);
+#if USE_64BIT_ADDRESS
+	MaxTileBits = NavMeshOwner ? FMath::CeilToFloat(FMath::Log2(NavMeshOwner->GetTileNumberHardLimit())) : 20;
+	MaxPolyBits = FMath::Min<int32>(32, (TotalBits - DT_MIN_SALT_BITS) - MaxTileBits);
+#else
+	MaxTileBits = 14;
+	MaxPolyBits = (TotalBits - DT_MIN_SALT_BITS) - MaxTileBits;
+#endif//USE_64BIT_ADDRESS
+}
+
+int32 UFlibExportNevChunk::CaclulateMaxTilesCount(const TArray<FBox>& NavigableAreas, float TileSizeinWorldUnits, float AvgLayersPerGridCell)
+{
+	int32 GridCellsCount = 0;
+	for (FBox AreaBounds : NavigableAreas)
+	{
+		// TODO: need more precise calculation, currently we don't take into account that volumes can be overlapped
+		FBox RCBox = Unreal2RecastBox(AreaBounds);
+		int32 XSize = FMath::CeilToInt(RCBox.GetSize().X/TileSizeinWorldUnits) + 1;
+		int32 YSize = FMath::CeilToInt(RCBox.GetSize().Z/TileSizeinWorldUnits) + 1;
+		GridCellsCount+= (XSize*YSize);
+	}
+	
+	return FMath::CeilToInt(GridCellsCount * AvgLayersPerGridCell);
+}
+
+void UFlibExportNevChunk::CalcNavMeshProperties(const TArray<FBox> Boxs,int32& MaxTiles, int32& MaxPolys)
+{
+	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(UFlibExportNevChunk::GetGWorld());
+	ANavigationData* MainNavDataIns = NavSys->GetDefaultNavDataInstance();
+	ARecastNavMesh* RecastNavMeshIns = Cast<ARecastNavMesh>(MainNavDataIns);
+	const FRecastNavMeshGenerator* CurrentGen = static_cast<const FRecastNavMeshGenerator*>(RecastNavMeshIns->GetGenerator());
+	FRecastBuildConfig Config = CurrentGen->GetConfig();
+	
+	int32 MaxTileBits = -1;
+	int32 MaxPolyBits = -1;
+
+	// limit max amount of tiles
+	CalcPolyRefBits(RecastNavMeshIns, MaxTileBits, MaxPolyBits);
+	
+	const int32 MaxTilesFromMask = (1 << MaxTileBits);
+	int32 MaxRequestedTiles = 0;
+
+	MaxRequestedTiles = CaclulateMaxTilesCount(Boxs, Config.tileSize * Config.cs, 8.0f);
+
+
+	if (MaxRequestedTiles < 0 || MaxRequestedTiles > MaxTilesFromMask)
+	{
+		// UE_LOG(LogNavigation, Error, TEXT("Navmesh bounds are too large! Limiting requested tiles count (%d) to: (%d) for %s"), MaxRequestedTiles, MaxTilesFromMask, *GetFullNameSafe(DestNavMesh));
+		MaxRequestedTiles = MaxTilesFromMask;
+	}
+
+	// Max tiles and max polys affect how the tile IDs are calculated.
+	// There are (sizeof(dtPolyRef)*8 - DT_MIN_SALT_BITS) bits available for 
+	// identifying a tile and a polygon.
+	#if USE_64BIT_ADDRESS
+	MaxPolys = (MaxPolyBits >= 32) ? INT_MAX : (1 << MaxPolyBits);
+#else
+	MaxPolys = 1 << ((sizeof(dtPolyRef) * 8 - DT_MIN_SALT_BITS) - MaxTileBits);
+#endif // USE_64BIT_ADDRESS
+	MaxTiles = MaxRequestedTiles;
 }

@@ -12,7 +12,7 @@ ANavMeshAreaExporter::ANavMeshAreaExporter()
 	PrimaryActorTick.bCanEverTick = true;
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
 	BoxComponent->SetBoxExtent(BoxExtent);
-	NavMeshChunker = Cast<UNavMeshChunker>(UNavMeshChunker::StaticClass()->GetDefaultObject());
+	NavMeshChunker = CreateDefaultSubobject<UNavMeshChunker>(TEXT("NavMeshChunker"),true);
 	SetRootComponent(BoxComponent);
 }
 

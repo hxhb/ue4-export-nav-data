@@ -109,14 +109,21 @@ void UNavMeshChunker::DrawNavMeshsArea()
 	}
 	if(NavMeshData)
 	{
+		
 		int max_tile_index = NavMeshData->getMaxTiles();
 		for(int tile_index = 0;tile_index < max_tile_index;++tile_index)
 		{
 			const dtMeshTile* CurrentTile = CALL_MEMBER_FUNCTION(NavMeshData,dtNavMesh_GetTile,tile_index);
-			if(CurrentTile && CurrentTile->header)
+			
+			if(CurrentTile && CurrentTile->header && CurrentTile->polys && CurrentTile->data)
 			{
-				FBox TileBounds = Recast2UnrealBox(CurrentTile->header->bmin, CurrentTile->header->bmax);
-				UKismetSystemLibrary::DrawDebugBox(World,TileBounds.GetCenter(),TileBounds.GetExtent(),FLinearColor::Green,FRotator::ZeroRotator,5.0f);
+				dtTileRef TileRef = NavMeshData->getTileRef(CurrentTile);
+				if (TileRef && NavMeshData->isValidPolyRef(TileRef))
+				{
+					FBox TileBounds = Recast2UnrealBox(CurrentTile->header->bmin, CurrentTile->header->bmax);
+					UKismetSystemLibrary::DrawDebugBox(World,TileBounds.GetCenter(),TileBounds.GetExtent(),FLinearColor::Green,FRotator::ZeroRotator,5.0f);
+				}
+				
 			}
 		}
 	}

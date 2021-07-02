@@ -296,15 +296,27 @@ dtNavMesh* UE4RecastHelper::DeSerializeMultidtNavMesh(std::vector<std::string> b
 	dtNavMesh* NavMesh = nullptr;
 
 	auto dtNavMesh_GetTile=GET_PRIVATE_MEMBER_FUNCTION(dtNavMesh, getTile);
-	
+
+	std::vector<dtNavMesh*> NavMeshs;
+	uint32 max_tiles = 0;
 	for(const auto& bin:bins)
 	{
 		dtNavMesh* CurrNavMesh = UE4RecastHelper::DeSerializedtNavMesh(bin.c_str());
-		if(!NavMesh && CurrNavMesh)
+		if(CurrNavMesh)
 		{
-			NavMesh = CurrNavMesh;
+			NavMeshs.push_back(CurrNavMesh);
+			max_tiles+=CurrNavMesh->getMaxTiles();
 			continue;
 		}
+	}
+
+	NavMesh = dtAllocNavMesh();
+	dtNavMeshParams params = *NavMeshs[1]->getParams();
+	params.maxTiles = max_tiles;
+	
+	NavMesh->init(&params);
+	for(const auto& CurrNavMesh:NavMeshs)
+	{
 		GET_REF_PRIVATE_DATA_MEMBER(NavMesh_m_maxTiles, NavMesh, dtNavMesh, m_maxTiles);
 		GET_REF_PRIVATE_DATA_MEMBER(NavMesh_m_params, NavMesh, dtNavMesh, m_params);
 		
@@ -315,7 +327,7 @@ dtNavMesh* UE4RecastHelper::DeSerializeMultidtNavMesh(std::vector<std::string> b
 			const dtMeshTile* CurrentTile = CALL_MEMBER_FUNCTION(CurrNavMesh,dtNavMesh_GetTile,tileIndex); //MainRecastNavMesh->getTile(tileIndex);
 			dtTileRef TileRef = CurrNavMesh->getTileRef(CurrentTile);
 			size_t TileDataSize = CurrentTile->dataSize;
-			if(CurrentTile->data && TileDataSize > 0)
+			if(TileRef && CurrentTile->data && TileDataSize > 0)
 			{
 				char* TileData = UE4RecastHelper::DuplicateRecastRawData((char*)CurrentTile->data,TileDataSize);
 				dtTileRef AddtedTile;

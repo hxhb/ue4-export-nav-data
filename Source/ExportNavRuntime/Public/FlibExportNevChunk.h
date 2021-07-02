@@ -41,4 +41,8 @@ public:
 	static void GetNavMeshTilesRefInArea(dtNavMesh* DetourNavMesh,const TArray<FBox>& InclusionBounds, TArray<dtTileRef>& Indices,UWorld* World=NULL);
 
 	static UWorld* GetGWorld();
+
+	static void CalcPolyRefBits(ARecastNavMesh* NavMeshOwner, int32& MaxTileBits, int32& MaxPolyBits);
+	static int32 CaclulateMaxTilesCount(const TArray<FBox>& NavigableAreas, float TileSizeinWorldUnits, float AvgLayersPerGridCell);
+	static void CalcNavMeshProperties(const TArray<FBox> Boxs,int32& MaxTiles, int32& MaxPolys);
 };

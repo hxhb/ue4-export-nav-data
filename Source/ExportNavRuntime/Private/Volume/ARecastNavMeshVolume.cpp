@@ -5,7 +5,7 @@
 
 AARecastNavMeshVolume::AARecastNavMeshVolume(const FObjectInitializer& Initializer):Super(Initializer)
 {
-	NavMeshChunker = Cast<UNavMeshChunker>(UNavMeshChunker::StaticClass()->GetDefaultObject());
+	NavMeshChunker = CreateDefaultSubobject<UNavMeshChunker>(TEXT("NavMeshChunker"),true);
 }
 
 

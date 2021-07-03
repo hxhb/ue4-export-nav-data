@@ -109,13 +109,12 @@ void UNavMeshChunker::DrawNavMeshsArea()
 	}
 	if(NavMeshData)
 	{
-		
 		int max_tile_index = NavMeshData->getMaxTiles();
 		for(int tile_index = 0;tile_index < max_tile_index;++tile_index)
 		{
 			const dtMeshTile* CurrentTile = CALL_MEMBER_FUNCTION(NavMeshData,dtNavMesh_GetTile,tile_index);
 			
-			if(CurrentTile && CurrentTile->header && CurrentTile->polys && CurrentTile->data)
+			if(CurrentTile && CurrentTile->header && CurrentTile->polys && strlen((const char*)CurrentTile->data) && CurrentTile->dataSize)
 			{
 				dtTileRef TileRef = NavMeshData->getTileRef(CurrentTile);
 				if (TileRef && NavMeshData->isValidPolyRef(TileRef))

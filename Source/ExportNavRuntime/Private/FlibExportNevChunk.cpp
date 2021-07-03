@@ -45,7 +45,7 @@ bool UFlibExportNevChunk::ExportNavAreaByRef(UWorld* World, TArray<FBox> Areas,c
 		if(TileData)
 		{
 			dtTileRef AddtedTile;
-			dtStatus AddStatus =  NavMesh->addTile((unsigned char*)TileData,TileDataSize,CurrentTile->flags,TileRef,&AddtedTile);
+			dtStatus AddStatus =  NavMesh->addTile((unsigned char*)TileData,TileDataSize,DT_TILE_FREE_DATA,TileRef,&AddtedTile);
 
 			if (!dtStatusSucceed(AddStatus))
 			{
@@ -248,7 +248,7 @@ int32 UFlibExportNevChunk::CaclulateMaxTilesCount(const TArray<FBox>& NavigableA
 	
 	return FMath::CeilToInt(GridCellsCount * AvgLayersPerGridCell);
 }
-
+#include "NavigationSystem.h"
 void UFlibExportNevChunk::CalcNavMeshProperties(const TArray<FBox> Boxs,int32& MaxTiles, int32& MaxPolys)
 {
 	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(UFlibExportNevChunk::GetGWorld());

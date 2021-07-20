@@ -3,7 +3,6 @@
 #include "FlibExportNavData.h"
 #include "FlibExportNevChunk.h"
 #include "NavigationSystem.h"
-#include "Builders/CubeBuilder.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 TArray<FString> UNavMeshChunker::GetNavMeshFiles() const

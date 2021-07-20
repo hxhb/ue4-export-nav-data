@@ -3,7 +3,6 @@
 #include "FlibExportNavData.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "HACK_PRIVATE_MEMBER_UTILS.hpp"
-#include "ToolContextInterfaces.h"
 #include "Detour/DetourNavMesh.h"
 
 DEFINE_LOG_CATEGORY(LogExportNavMesh);

@@ -299,26 +299,31 @@ dtNavMesh* UE4RecastHelper::DeSerializeMultidtNavMesh(std::vector<std::string> b
 
 	std::vector<dtNavMesh*> NavMeshs;
 	uint32 max_tiles = 0;
+	uint32 max_poly = 0;
 	for(const auto& bin:bins)
 	{
 		dtNavMesh* CurrNavMesh = UE4RecastHelper::DeSerializedtNavMesh(bin.c_str());
 		if(CurrNavMesh)
 		{
 			NavMeshs.push_back(CurrNavMesh);
-			max_tiles+=CurrNavMesh->getMaxTiles();
+			max_tiles+=CurrNavMesh->getParams()->maxTiles;
+			max_poly+=CurrNavMesh->getParams()->maxPolys;
 			continue;
 		}
 	}
-
+	if(!NavMeshs.size())
+		return NULL;
+	
 	NavMesh = dtAllocNavMesh();
-	dtNavMeshParams params = *NavMeshs[1]->getParams();
+	dtNavMeshParams params = *NavMeshs[0]->getParams();
 	params.maxTiles = max_tiles;
+	params.maxPolys = std::max<int>(params.maxPolys,max_poly);
 	
 	NavMesh->init(&params);
 	for(const auto& CurrNavMesh:NavMeshs)
 	{
-		GET_REF_PRIVATE_DATA_MEMBER(NavMesh_m_maxTiles, NavMesh, dtNavMesh, m_maxTiles);
-		GET_REF_PRIVATE_DATA_MEMBER(NavMesh_m_params, NavMesh, dtNavMesh, m_params);
+		// GET_REF_PRIVATE_DATA_MEMBER(NavMesh_m_maxTiles, NavMesh, dtNavMesh, m_maxTiles);
+		// GET_REF_PRIVATE_DATA_MEMBER(NavMesh_m_params, NavMesh, dtNavMesh, m_params);
 		
 		// NavMesh_m_params.maxPolys += CurrNavMesh->getParams()->maxPolys;
 
@@ -333,11 +338,11 @@ dtNavMesh* UE4RecastHelper::DeSerializeMultidtNavMesh(std::vector<std::string> b
 				dtTileRef AddtedTile;
 				unsigned int founedIndex = NavMesh->getTileIndex(CurrentTile);
 
-				dtStatus AddStatus = NavMesh->addTile((unsigned char*)TileData, TileDataSize, CurrentTile->flags, TileRef, &AddtedTile);
+				dtStatus AddStatus = NavMesh->addTile((unsigned char*)TileData, TileDataSize, DT_TILE_FREE_DATA, TileRef, &AddtedTile);
 				if (dtStatusSucceed(AddStatus))
 				{
-					NavMesh_m_maxTiles++;
-					NavMesh_m_params.maxTiles++;
+					// NavMesh_m_maxTiles++;
+					// NavMesh_m_params.maxTiles++;
 				}
 				else
 				{
@@ -345,6 +350,7 @@ dtNavMesh* UE4RecastHelper::DeSerializeMultidtNavMesh(std::vector<std::string> b
 				}
 			}
 		}
+		dtFreeNavMesh(CurrNavMesh);
 	}
 	return NavMesh;
 }
@@ -353,10 +359,11 @@ char* UE4RecastHelper::DuplicateRecastRawData(char* Src, int32 SrcSize)
 {
 #if WITH_RECAST	
 	char* DupData = (char*)dtAlloc(SrcSize, DT_ALLOC_PERM);
+	std::memset(DupData,0,SrcSize);
 #else
 	char* DupData = (char*)FMemory::Malloc(SrcSize);
 #endif
-	FMemory::Memcpy(DupData, Src, SrcSize);
+	std::memcpy(DupData, Src, SrcSize);
 	return DupData;
 }
 

@@ -25,6 +25,7 @@ UdtNavMeshWrapper::~UdtNavMeshWrapper()
 
 UdtNavMeshWrapper* UdtNavMeshWrapper::LoadNavData(const TArray<FString>& NavDataBinPaths)
 {
+	ReleaseNavData();
 	std::vector<std::string> binpaths;
 	for(const auto&NavDataPath:NavDataBinPaths)
 	{

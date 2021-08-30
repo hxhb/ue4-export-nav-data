@@ -44,7 +44,7 @@ void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& Fi
 				uint8 AreaId;
 			};
 			TArray<FAreaExportData> AreaExport;
-#if ENGINE_MAJOR_VERSION>=4 || ENGINE_MINOR_VERSION >=26
+#if ENGINE_MAJOR_VERSION > 4 || ENGINE_MINOR_VERSION >= 26
 			NavOctree->FindElementsWithBoundsTest(TotalNavBounds, [&](const FNavigationOctreeElement& Element)
 #else
 			for (FNavigationOctree::TConstElementBoxIterator<FNavigationOctree::DefaultStackAllocator> It(*NavOctree, TotalNavBounds);
@@ -52,7 +52,7 @@ void FExternExportNavMeshGenerator::ExternExportNavigationData(const FString& Fi
 				It.Advance())
 #endif
 			{
-#if ENGINE_MAJOR_VERSION<=4 && ENGINE_MINOR_VERSION < 26
+#if ENGINE_MAJOR_VERSION <= 4 && ENGINE_MINOR_VERSION < 26
 				const FNavigationOctreeElement& Element = It.GetCurrentElement();
 #endif
 				const bool bExportGeometry = Element.Data->HasGeometry() && Element.ShouldUseGeometry(DestNavMesh->GetConfig());

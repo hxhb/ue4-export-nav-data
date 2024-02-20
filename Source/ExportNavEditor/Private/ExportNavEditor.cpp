@@ -19,6 +19,17 @@ static const FName ExportNavTabName("ExportNav");
 
 #define LOCTEXT_NAMESPACE "FExportNavEditorModule"
 
+UExportNavmeshPluginUserSettings::UExportNavmeshPluginUserSettings()
+{
+	CategoryName = TEXT("Plugins");
+	SectionName = TEXT("ExportNavmesh");
+}
+
+FText UExportNavmeshPluginUserSettings::GetSectionText() const
+{
+	return LOCTEXT("UserSettingsDisplayName", "ExportNavmesh");
+}
+
 void FExportNavEditorModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
@@ -91,21 +102,48 @@ void FExportNavEditorModule::PluginButtonClicked()
 
 			FText NavMeshMsg = LOCTEXT("SaveNavMeshMesh", "Successd to Export the NavMesh.");
 
-#if EXPORT_NAV_MESH_AS_CM
-			FString NavMeshFileCM = FPaths::Combine(OutPath, MapName + TEXT("-NavMesh-CM-") + CurrentTime+TEXT(".obj"));
-			DoExportNavMesh(NavMeshFileCM,EExportMode::Centimeter);
-			CreateSaveFileNotify(NavMeshMsg, NavMeshFileCM);
-#endif
-#if EXPORT_NAV_MESH_AS_M
-			FString NavMeshFileM = FPaths::Combine(OutPath, MapName + TEXT("-NavMesh-M-") + CurrentTime + TEXT(".obj"));
-			DoExportNavMesh(NavMeshFileM, EExportMode::Metre);
-			CreateSaveFileNotify(NavMeshMsg, NavMeshFileM);
-#endif
-			FString NavDataFile = FPaths::Combine(OutPath, MapName + TEXT("-NavData-") + CurrentTime+TEXT(".bin"));
-			DoExportNavData(NavDataFile);
+			UExportNavmeshPluginUserSettings* EditorConfig = GetMutableDefault<UExportNavmeshPluginUserSettings>();
+			if(EditorConfig->bExportObjCM)
+			{
+				if(EditorConfig->bExportMultipleNavMesh)
+				{
+					UFlibExportNavData::ExportAllRecastNavMesh(OutPath,MapName,CurrentTime,EExportMode::Centimeter);
+				}
+				else
+				{
+					FString NavMeshFileCM = FPaths::Combine(OutPath, MapName + TEXT("-NavMesh-CM-") + CurrentTime+TEXT(".obj"));
+					DoExportNavMesh(NavMeshFileCM,EExportMode::Centimeter);
+					CreateSaveFileNotify(NavMeshMsg, NavMeshFileCM);
+				}
+			}
+			if(EditorConfig->bExportObjM)
+			{
+				if(EditorConfig->bExportMultipleNavMesh)
+				{
+					UFlibExportNavData::ExportAllRecastNavMesh(OutPath,MapName,CurrentTime,EExportMode::Metre);
+				}
+				else
+				{
+					FString NavMeshFileM = FPaths::Combine(OutPath, MapName + TEXT("-NavMesh-M-") + CurrentTime + TEXT(".obj"));
+					DoExportNavMesh(NavMeshFileM, EExportMode::Metre);
+					CreateSaveFileNotify(NavMeshMsg, NavMeshFileM);
+				}
+			}
+			if(EditorConfig->bExportBinFile)
+			{
+				if(EditorConfig->bExportMultipleNavMesh)
+				{
+					UFlibExportNavData::ExportAllRecastNavData(OutPath,MapName,CurrentTime);	
+				}
+				else
+				{
+					FString NavDataFile = FPaths::Combine(OutPath, MapName + TEXT("-NavData-") + CurrentTime+TEXT(".bin"));
+					DoExportNavData(NavDataFile);
 
-			FText NavDataMsg = LOCTEXT("SaveNavMeshData", "Successd to Export the RecastNavigation data.");
-			CreateSaveFileNotify(NavDataMsg, NavDataFile);
+					FText NavDataMsg = LOCTEXT("SaveNavMeshData", "Successd to Export the RecastNavigation data.");
+					CreateSaveFileNotify(NavDataMsg, NavDataFile);
+				}
+			}
 		}
 	}
 }

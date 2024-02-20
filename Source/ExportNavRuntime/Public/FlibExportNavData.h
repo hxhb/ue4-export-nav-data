@@ -22,9 +22,12 @@ public:
 	// Editor only
 	// UFUNCTION(Exec,BlueprintCallable,Category="ExportNav")
 		static bool ExportRecastNavMesh(const FString& SavePath,EExportMode InExportMode);
+		static bool ExportAllRecastNavMesh(const FString& OutPath,const FString& MapName,const FString& CurrentTime,EExportMode InExportMode);
+		static void CreateSaveFileNotify(const FText& InMsg, const FString& InSavedFile);
 	// Editor and Runtime
 	// UFUNCTION(Exec,BlueprintCallable,Category="ExportNav")
 		static bool ExportRecastNavData(const FString& InFilePath);
+		static bool ExportAllRecastNavData(const FString& OutPath,const FString& MapName,const FString& CurrentTime);
 
 	static dtNavMesh* GetdtNavMeshInsByWorld(UWorld* InWorld);
 

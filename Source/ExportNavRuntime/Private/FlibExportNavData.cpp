@@ -13,23 +13,28 @@
 #include "Misc/Paths.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
+#include "Framework/Notifications/NotificationManager.h"
 #include "Resources/Version.h"
+#include "Widgets/Notifications/SNotificationList.h"
+#include "Internationalization/Internationalization.h"
+
 
 DECLARE_STATS_GROUP(TEXT("ExportNav"), STATGROUP_ExportNav, STATCAT_Advanced);
+
 DECLARE_CYCLE_STAT(TEXT("ExportNav"), STAT_ExportNav, STATGROUP_ExportNav);
 
-bool UFlibExportNavData::ExportRecastNavMesh(const FString& SaveFile,EExportMode InExportMode)
+bool UFlibExportNavData::ExportRecastNavMesh(const FString& SaveFile, EExportMode InExportMode)
 {
 #if WITH_EDITOR
-	
-	FString FinalSaveFile=SaveFile;
+
+	FString FinalSaveFile = SaveFile;
 
 	// UWorld* World = GEditor->GetEditorWorldContext(false).World();  
 
-	UWorld* World=NULL;
+	UWorld* World = NULL;
 
 	auto WorldList = GEngine->GetWorldContexts();
-	for (int32 i=0;i < WorldList.Num();++i)
+	for (int32 i = 0; i < WorldList.Num(); ++i)
 	{
 		UWorld* local_World = WorldList[i].World();
 
@@ -38,21 +43,21 @@ bool UFlibExportNavData::ExportRecastNavMesh(const FString& SaveFile,EExportMode
 			World = local_World;
 			break;
 		}
-	
 	}
 
 	if (World && World->GetNavigationSystem())
 	{
 		if (ANavigationData* NavData = Cast<ANavigationData>(World->GetNavigationSystem()->GetMainNavData()))
 		{
-			if (FExternExportNavMeshGenerator* Generator = static_cast<FExternExportNavMeshGenerator*>(NavData->GetGenerator()))
+			if (FExternExportNavMeshGenerator* Generator = static_cast<FExternExportNavMeshGenerator*>(NavData->
+				GetGenerator()))
 			{
 				if (SaveFile.IsEmpty())
 				{
 					const FString Name = NavData->GetName();
 					FinalSaveFile = FPaths::Combine(FPaths::ProjectSavedDir(), Name);
 				}
-				Generator->ExternExportNavigationData(FinalSaveFile,InExportMode);
+				Generator->ExternExportNavigationData(FinalSaveFile, InExportMode);
 				return true;
 			}
 		}
@@ -61,6 +66,90 @@ bool UFlibExportNavData::ExportRecastNavMesh(const FString& SaveFile,EExportMode
 #else
 	return false;
 #endif
+}
+
+bool UFlibExportNavData::ExportAllRecastNavMesh(const FString& OutPath, const FString& MapName,
+                                                const FString& CurrentTime, EExportMode InExportMode)
+{
+#if !WITH_EDITOR
+	return false;
+#endif
+	UWorld* World = nullptr;
+
+	TIndirectArray<FWorldContext> WorldList = GEngine->GetWorldContexts();
+	for (int32 i = 0; i < WorldList.Num(); ++i)
+	{
+		UWorld* local_World = WorldList[i].World();
+
+		if (UKismetSystemLibrary::IsValid(local_World) && local_World->WorldType == EWorldType::Editor)
+		{
+			World = local_World;
+			break;
+		}
+	}
+
+	if (!World)
+	{
+		return false;
+	}
+
+	UNavigationSystemBase* NavSys = World->GetNavigationSystem();
+	if (!NavSys)
+	{
+		return false;
+	}
+
+	UNavigationSystemV1* NavSysV1 = Cast<UNavigationSystemV1>(World->GetNavigationSystem());
+	if (!NavSysV1)
+	{
+		UE_LOG(LogNavigation, Warning,
+		       TEXT(
+			       "u are not using UNavigationSystemV1, [UFlibExportNavData::ExportRecastAllNavMesh] will not be supported."
+		       ))
+		return false;
+	}
+
+	bool HaveSuccessExport = false;
+	const TArray<ANavigationData*>& NavDataArr = NavSysV1->NavDataSet;
+	for (int32 i = 0; i < NavDataArr.Num(); i++)
+	{
+		FString FileName = FString::Printf(
+			TEXT("%s/%s-Navmesh_%s-%s-%s.obj"), *OutPath, *MapName, *NavDataArr[i]->GetName(),
+			InExportMode == EExportMode::Metre ? TEXT("M") : TEXT("CM"), *CurrentTime);
+		if (FExternExportNavMeshGenerator* Generator = static_cast<FExternExportNavMeshGenerator*>(NavDataArr[i]->
+			GetGenerator()))
+		{
+			Generator->ExternExportNavigationData(FileName, InExportMode);
+			
+			FText NavMeshMsg = FText::FromString(FString(TEXT("Successd to Export the NavMesh.")));
+			CreateSaveFileNotify(NavMeshMsg, FileName);
+			
+			HaveSuccessExport = true;
+		}
+	}
+	return HaveSuccessExport;
+}
+
+void UFlibExportNavData::CreateSaveFileNotify(const FText& InMsg, const FString& InSavedFile)
+{
+	auto Message = InMsg;
+	FNotificationInfo Info(Message);
+	Info.bFireAndForget = true;
+	Info.ExpireDuration = 5.0f;
+	Info.bUseSuccessFailIcons = false;
+	Info.bUseLargeFont = false;
+
+	const FString HyperLinkText = InSavedFile;
+	Info.Hyperlink = FSimpleDelegate::CreateStatic(
+		[](FString SourceFilePath)
+	{
+		FPlatformProcess::ExploreFolder(*SourceFilePath);
+	},
+		HyperLinkText
+		);
+	Info.HyperlinkText = FText::FromString(HyperLinkText);
+
+	FSlateNotificationManager::Get().AddNotification(Info)->SetCompletionState(SNotificationItem::CS_Success);
 }
 
 bool UFlibExportNavData::ExportRecastNavData(const FString& InFilePath)
@@ -87,9 +176,61 @@ bool UFlibExportNavData::ExportRecastNavData(const FString& InFilePath)
 		UE4RecastHelper::SerializedtNavMesh(TCHAR_TO_ANSI(*InFilePath), RecastdtNavMesh);
 		return true;
 	}
-	else {
+	else
+	{
 		return false;
 	}
+}
+
+bool UFlibExportNavData::ExportAllRecastNavData(const FString& OutPath, const FString& MapName,
+	const FString& CurrentTime)
+{
+	// UWorld* World = GEditor->GetEditorWorldContext(false).World();
+	UWorld* World = NULL;
+
+	auto WorldList = GEngine->GetWorldContexts();
+	for (int32 i = 0; i < WorldList.Num(); ++i)
+	{
+		UWorld* local_World = WorldList[i].World();
+		if (local_World && UKismetSystemLibrary::IsValid(local_World))
+		{
+			World = local_World;
+			break;
+		}
+	}
+	if (!World) return false;
+
+	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(World);
+	if (!NavSys)
+	{
+		UE_LOG(LogNavigation, Warning,
+			   TEXT(
+				   "u are not using UNavigationSystemV1, [UFlibExportNavData::ExportAllRecastNavData] will not be supported."
+			   ))
+		return false;
+	}
+	const TArray<ANavigationData*>& NavDataArr = NavSys->NavDataSet;
+	int Cnt = 0;
+	for (int32 i = 0; i < NavDataArr.Num(); i++)
+	{
+		ARecastNavMesh* RecastNavMeshIns = Cast<ARecastNavMesh>(NavDataArr[i]);
+		if(!RecastNavMeshIns || !UKismetSystemLibrary::IsValid(RecastNavMeshIns))
+		{
+			continue;
+		}
+		dtNavMesh* RecastdtNavMesh = RecastNavMeshIns->GetRecastMesh();
+		if(!RecastdtNavMesh)
+		{
+			continue;
+		}
+		FString InFilePath = FString::Printf(TEXT("%s/%s-NavData_%s-%s.bin"),*OutPath,*MapName, *NavDataArr[i]->GetName(),*CurrentTime);
+		UE4RecastHelper::SerializedtNavMesh(TCHAR_TO_ANSI(*InFilePath), RecastdtNavMesh);
+		
+		FText NavDataMsg = FText::FromString(FString(TEXT("Successd to Export the RecastNavigation data.")));
+		CreateSaveFileNotify(NavDataMsg, InFilePath);
+		Cnt++;
+	}
+	return Cnt == NavDataArr.Num();
 }
 
 
@@ -99,7 +240,7 @@ dtNavMesh* UFlibExportNavData::GetdtNavMeshInsByWorld(UWorld* InWorld)
 	check(NavSys);
 	ANavigationData* MainNavDataIns = NavSys->GetDefaultNavDataInstance();
 	ARecastNavMesh* RecastNavMeshIns = Cast<ARecastNavMesh>(MainNavDataIns);
-	if(RecastNavMeshIns && UKismetSystemLibrary::IsValid(RecastNavMeshIns))
+	if (RecastNavMeshIns && UKismetSystemLibrary::IsValid(RecastNavMeshIns))
 	{
 		dtNavMesh* RecastdtNavMesh = RecastNavMeshIns->GetRecastMesh();
 		return RecastdtNavMesh;
@@ -107,7 +248,8 @@ dtNavMesh* UFlibExportNavData::GetdtNavMeshInsByWorld(UWorld* InWorld)
 	return NULL;
 }
 
-bool UFlibExportNavData::IsValidNavigvationPointInWorld(UObject* WorldContextObject, const FVector& Point, const FVector InExtern /*= FVector::ZeroVector*/)
+bool UFlibExportNavData::IsValidNavigvationPointInWorld(UObject* WorldContextObject, const FVector& Point,
+                                                        const FVector InExtern /*= FVector::ZeroVector*/)
 {
 	bool rSuccess = false;
 
@@ -123,7 +265,8 @@ bool UFlibExportNavData::IsValidNavigvationPointInWorld(UObject* WorldContextObj
 	return rSuccess;
 }
 
-bool UFlibExportNavData::IsValidNavigationPointInNavObj(UdtNavMeshWrapper* InDtNavObject, const FVector& Point, const FVector InExtern)
+bool UFlibExportNavData::IsValidNavigationPointInNavObj(UdtNavMeshWrapper* InDtNavObject, const FVector& Point,
+                                                        const FVector InExtern)
 {
 	bool rSuccess = false;
 
@@ -139,7 +282,9 @@ bool UFlibExportNavData::IsValidNavigationPointInNavObj(UdtNavMeshWrapper* InDtN
 	return rSuccess;
 }
 
-bool UFlibExportNavData::FindDetourPathFromGameAxisByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, const FVector& InExternSize, TArray<FVector>& OutPaths)
+bool UFlibExportNavData::FindDetourPathFromGameAxisByNavObject(class UdtNavMeshWrapper* InDtNavObject,
+                                                               const FVector& InStart, const FVector& InEnd,
+                                                               const FVector& InExternSize, TArray<FVector>& OutPaths)
 {
 	using namespace UE4RecastHelper;
 
@@ -149,13 +294,15 @@ bool UFlibExportNavData::FindDetourPathFromGameAxisByNavObject(class UdtNavMeshW
 		dtNavMesh* NavMeshData = InDtNavObject->GetNavData();
 		if (NavMeshData)
 		{
-			bstatus = UFlibExportNavData::FindDetourPathByGameAxis(NavMeshData, InStart, InEnd,InExternSize, OutPaths);
+			bstatus = UFlibExportNavData::FindDetourPathByGameAxis(NavMeshData, InStart, InEnd, InExternSize, OutPaths);
 		}
 	}
 	return bstatus;
 }
 
-bool UFlibExportNavData::FindDetourPathFromRecastAxisByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InStart, const FVector& InEnd, const FVector& InExternSize, TArray<FVector>& OutPaths)
+bool UFlibExportNavData::FindDetourPathFromRecastAxisByNavObject(class UdtNavMeshWrapper* InDtNavObject,
+                                                                 const FVector& InStart, const FVector& InEnd,
+                                                                 const FVector& InExternSize, TArray<FVector>& OutPaths)
 {
 	using namespace UE4RecastHelper;
 
@@ -165,13 +312,15 @@ bool UFlibExportNavData::FindDetourPathFromRecastAxisByNavObject(class UdtNavMes
 		dtNavMesh* NavMeshData = InDtNavObject->GetNavData();
 		if (NavMeshData)
 		{
-			bstatus = UFlibExportNavData::FindDetourPathByRecastAxis(NavMeshData, InStart, InEnd,InExternSize, OutPaths);
+			bstatus = UFlibExportNavData::FindDetourPathByRecastAxis(NavMeshData, InStart, InEnd, InExternSize,
+			                                                         OutPaths);
 		}
 	}
 	return bstatus;
 }
 
-bool UFlibExportNavData::FindDetourPathByEngineNavMesh(const FVector& InStart, const FVector& InEnd, const FVector& InExternSize, TArray<FVector>& OutPaths)
+bool UFlibExportNavData::FindDetourPathByEngineNavMesh(const FVector& InStart, const FVector& InEnd,
+                                                       const FVector& InExternSize, TArray<FVector>& OutPaths)
 {
 	UWorld* World = NULL;
 
@@ -189,12 +338,12 @@ bool UFlibExportNavData::FindDetourPathByEngineNavMesh(const FVector& InStart, c
 
 	dtNavMesh* RecastdtNavMesh = UFlibExportNavData::GetdtNavMeshInsByWorld(World);
 
-	return UFlibExportNavData::FindDetourPathByGameAxis(RecastdtNavMesh, InStart, InEnd,InExternSize, OutPaths);
-	
+	return UFlibExportNavData::FindDetourPathByGameAxis(RecastdtNavMesh, InStart, InEnd, InExternSize, OutPaths);
 }
 
 
-bool UFlibExportNavData::GetRandomPointByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InOrigin, const FVector& InRedius, FVector& OutPoint)
+bool UFlibExportNavData::GetRandomPointByNavObject(class UdtNavMeshWrapper* InDtNavObject, const FVector& InOrigin,
+                                                   const FVector& InRedius, FVector& OutPoint)
 {
 	dtNavMeshQuery NavQuery;
 	dtQueryFilter QueryFilter;
@@ -209,9 +358,11 @@ bool UFlibExportNavData::GetRandomPointByNavObject(class UdtNavMeshWrapper* InDt
 	OutPoint = Result.UE4Vector();
 	return Status;
 }
+
 #include "Detour/DetourStatus.h"
 
-bool UFlibExportNavData::FindDetourPathByRecastAxis(dtNavMesh* InNavMesh, const FVector& InStart, const FVector& InEnd, const FVector& ExternSize, TArray<FVector>& OutPaths)
+bool UFlibExportNavData::FindDetourPathByRecastAxis(dtNavMesh* InNavMesh, const FVector& InStart, const FVector& InEnd,
+                                                    const FVector& ExternSize, TArray<FVector>& OutPaths)
 {
 	FVector RcStart = InStart;
 	FVector RcEnd = InEnd;
@@ -221,26 +372,28 @@ bool UFlibExportNavData::FindDetourPathByRecastAxis(dtNavMesh* InNavMesh, const 
 
 	NavQuery.init(InNavMesh, 1024);
 
-	float Extern[3]{ ExternSize.X,ExternSize.Y,ExternSize.Z };
+	float Extern[3]{ExternSize.X, ExternSize.Y, ExternSize.Z};
 
-	float StartPoint[3]{ RcStart.X,RcStart.Y,RcStart.Z };
+	float StartPoint[3]{RcStart.X, RcStart.Y, RcStart.Z};
 	dtPolyRef StartPolyRef;
-	float StartNarestPt[3]{ 0.f };
+	float StartNarestPt[3]{0.f};
 	dtStatus StartStatus = NavQuery.findNearestPoly(StartPoint, Extern, &QueryFilter, &StartPolyRef, StartNarestPt);
 
-	float EndPoint[3]{ RcEnd.X,RcEnd.Y,RcEnd.Z };
+	float EndPoint[3]{RcEnd.X, RcEnd.Y, RcEnd.Z};
 	dtPolyRef EndPolyRef;
-	float EndNarestPt[3]{ 0.f };
+	float EndNarestPt[3]{0.f};
 	dtStatus EndStatus = NavQuery.findNearestPoly(EndPoint, Extern, &QueryFilter, &EndPolyRef, EndNarestPt);
 
 	UE_LOG(LogTemp, Log, TEXT("Start Point FindNearestPoly status is %u,PolyRef is %u."), StartStatus, StartPolyRef);
 	UE_LOG(LogTemp, Log, TEXT("End Point FindNearestPoly status is %u.,PolyRef is %u."), EndStatus, EndPolyRef);
-	UE_LOG(LogTemp, Log, TEXT("Start Point FindNearestPoly narestpt is %s."), *FVector(StartPoint[0], StartPoint[1], StartPoint[2]).ToString());
-	UE_LOG(LogTemp, Log, TEXT("End Point FindNearestPoly narestpt is %s."), *FVector(EndPoint[0], EndPoint[1], EndPoint[2]).ToString());
+	UE_LOG(LogTemp, Log, TEXT("Start Point FindNearestPoly narestpt is %s."),
+	       *FVector(StartPoint[0], StartPoint[1], StartPoint[2]).ToString());
+	UE_LOG(LogTemp, Log, TEXT("End Point FindNearestPoly narestpt is %s."),
+	       *FVector(EndPoint[0], EndPoint[1], EndPoint[2]).ToString());
 
 	if (!dtStatusSucceed(StartStatus) || !dtStatusSucceed(EndStatus))
 	{
-		UE_LOG(LogTemp,Log,TEXT("find Start or End nearest poly faild."))
+		UE_LOG(LogTemp, Log, TEXT("find Start or End nearest poly faild."))
 		return false;
 	}
 
@@ -251,14 +404,15 @@ bool UFlibExportNavData::FindDetourPathByRecastAxis(dtNavMesh* InNavMesh, const 
 	dtStatus FindPathStatus = NavQuery.findPath(StartPolyRef, EndPolyRef, StartNarestPt, EndNarestPt, &QueryFilter, result, totalcost);
 #else
 	const float CostLimit = FLT_MAX;
-	dtStatus FindPathStatus = NavQuery.findPath(StartPolyRef, EndPolyRef, StartNarestPt, EndNarestPt, CostLimit, &QueryFilter, result, totalcost);
+	dtStatus FindPathStatus = NavQuery.findPath(StartPolyRef, EndPolyRef, StartNarestPt, EndNarestPt, CostLimit,
+	                                            &QueryFilter, result, totalcost);
 #endif
-	
+
 	UE_LOG(LogTemp, Log, TEXT("findPath status is %u.,result size is %u."), FindPathStatus, result.size());
 	if (!dtStatusSucceed(FindPathStatus) && result.size() <= 0)
 	{
 		UE_LOG(LogTemp, Log, TEXT("find path faild."))
-			return false;
+		return false;
 	}
 
 	std::vector<dtPolyRef> path;
@@ -267,49 +421,56 @@ bool UFlibExportNavData::FindDetourPathByRecastAxis(dtNavMesh* InNavMesh, const 
 	{
 		UE_LOG(LogTemp, Log, TEXT("Find Path index is %d ref is %u."), index, result.getRef(index));
 		path.push_back(result.getRef(index));
-		float currentpos[3]{ 0.f };
+		float currentpos[3]{0.f};
 		result.getPos(index, currentpos);
-		UE_LOG(LogTemp, Log, TEXT("Find Path index is %d pos is %s."), index, *UFlibExportNavData::Recast2UnrealPoint(FVector(currentpos[0], currentpos[1], currentpos[2])).ToString());
+		UE_LOG(LogTemp, Log, TEXT("Find Path index is %d pos is %s."), index,
+		       *UFlibExportNavData::Recast2UnrealPoint(FVector(currentpos[0], currentpos[1], currentpos[2])).ToString(
+		       ));
 		// OutPaths.Add(UFlibExportNavData::Recast2UnrealPoint(FVector(currentpos[0], currentpos[1], currentpos[2])));
 	}
-	
+
 	dtQueryResult findStraightPathResult;
 	NavQuery.findStraightPath(StartNarestPt, EndNarestPt, path.data(), path.size(), findStraightPathResult);
 
 	UE_LOG(LogTemp, Log, TEXT("findStraightPath size is %u."), findStraightPathResult.size());
 	for (int index = 0; index < findStraightPathResult.size(); ++index)
 	{
-		float currentpos[3]{ 0.f };
+		float currentpos[3]{0.f};
 		findStraightPathResult.getPos(index, currentpos);
-		UE_LOG(LogTemp, Log, TEXT("findStraightPath index is %d ref is %u."), index, findStraightPathResult.getRef(index));
-		UE_LOG(LogTemp, Log, TEXT("findStraightPath index is %d pos is %s."), index, *UFlibExportNavData::Recast2UnrealPoint(FVector(currentpos[0], currentpos[1], currentpos[2])).ToString());
+		UE_LOG(LogTemp, Log, TEXT("findStraightPath index is %d ref is %u."), index,
+		       findStraightPathResult.getRef(index));
+		UE_LOG(LogTemp, Log, TEXT("findStraightPath index is %d pos is %s."), index,
+		       *UFlibExportNavData::Recast2UnrealPoint(FVector(currentpos[0], currentpos[1], currentpos[2])).ToString(
+		       ));
 		OutPaths.Add(UFlibExportNavData::Recast2UnrealPoint(FVector(currentpos[0], currentpos[1], currentpos[2])));
 	}
 	return true;
 }
 
-bool UFlibExportNavData::FindDetourPathByGameAxis(dtNavMesh* InNavMesh, const FVector& InStart, const FVector& InEnd, const FVector& InExternSize, TArray<FVector>& OutPaths)
+bool UFlibExportNavData::FindDetourPathByGameAxis(dtNavMesh* InNavMesh, const FVector& InStart, const FVector& InEnd,
+                                                  const FVector& InExternSize, TArray<FVector>& OutPaths)
 {
 	FVector RcStart = UFlibExportNavData::Unreal2RecastPoint(InStart);
 	FVector RcEnd = UFlibExportNavData::Unreal2RecastPoint(InEnd);
-	return UFlibExportNavData::FindDetourPathByRecastAxis(InNavMesh, RcStart, RcEnd,InExternSize, OutPaths);
+	return UFlibExportNavData::FindDetourPathByRecastAxis(InNavMesh, RcStart, RcEnd, InExternSize, OutPaths);
 }
 
-bool UFlibExportNavData::IsValidNavigationPointInNavbin(const FString& InNavBinPath,const FVector& Point, const FVector InExtern)
+bool UFlibExportNavData::IsValidNavigationPointInNavbin(const FString& InNavBinPath, const FVector& Point,
+                                                        const FVector InExtern)
 {
 	bool rSuccess = false;
-	
+
 	if (InNavBinPath.IsEmpty() || !FPaths::FileExists(InNavBinPath))
 		return false;
 
 	dtNavMesh* NavMeshData = UE4RecastHelper::DeSerializedtNavMesh(TCHAR_TO_ANSI(*InNavBinPath));
-		
+
 	if (NavMeshData)
 	{
 		rSuccess = UE4RecastHelper::dtIsValidNavigationPoint(NavMeshData, Point, InExtern);
 		dtFreeNavMesh(NavMeshData);
 	}
-	
+
 	return rSuccess;
 }
 
@@ -343,9 +504,9 @@ FVector UFlibExportNavData::Unreal2RecastPoint(const FVector& Vector)
 	return FVector(-Vector.X, Vector.Z, -Vector.Y);
 }
 
-float UFlibExportNavData::FindDistanceToWall(UObject* WorldContextObject,const FVector& StartLoc)
+float UFlibExportNavData::FindDistanceToWall(UObject* WorldContextObject, const FVector& StartLoc)
 {
-	float result=0.f;
+	float result = 0.f;
 	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(WorldContextObject);
 	check(NavSys);
 	ANavigationData* MainNavDataIns = NavSys->GetDefaultNavDataInstance();

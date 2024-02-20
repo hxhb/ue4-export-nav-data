@@ -26,8 +26,9 @@ public class ExportNavEditor : ModuleRules
 			new string[]
 			{
 				"Core",
-                "ExportNavRuntime"
-				// ... add other public dependencies that you statically link with here ...
+                "ExportNavRuntime", 
+                "DeveloperSettings"
+                // ... add other public dependencies that you statically link with here ...
 			}
 			);
 			
